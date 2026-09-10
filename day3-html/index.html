@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <h1>Inventory Management System</h1>
+        <p>Compact II Gencon Inc.</p>
+        <hr>
+    </header>
+
+    <!-- ADD ITEM FORM -->
+    <section>
+        <h2>Add New Item</h2>
+        <form>
+            <div>
+                <label for="itemName">Item Name:</label><br>
+                <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
+            </div>
+            <br>
+
+            <div>
+                <label for="uniqueCode">Unique Code:</label><br>
+                <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
+            </div>
+            <br>
+
+            <div>
+                <label for="category">Category:</label><br>
+                <select id="category" name="category" required>
+                    <option value="">-- Select Category --</option>
+                    <option value="tools">Construction Tools</option>
+                    <option value="general">General Equipment</option>
+                    <option value="heavy">Heavy Equipment / Machinery</option>
+                    <option value="materials">Construction Materials</option>
+                    <option value="consumables">Consumable Materials</option>
+                </select>
+            </div>
+            <br>
+
+            <div>
+                <label for="brand">Brand:</label><br>
+                <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
+            </div>
+            <br>
+
+            <div>
+                <label for="quantity">Quantity:</label><br>
+                <input type="number" id="quantity" name="quantity" min="0" required>
+            </div>
+            <br>
+
+            <div>
+                <label for="location">Location:</label><br>
+                <input type="text" id="location" name="location" placeholder="e.g. Warehouse A">
+            </div>
+            <br>
+
+            <div>
+                <label for="condition">Condition:</label><br>
+                <select id="condition" name="condition" required>
+                    <option value="">-- Select Condition --</option>
+                    <option value="available">Available</option>
+                    <option value="in-use">In Use</option>
+                    <option value="low-stock">Low Stock</option>
+                    <option value="out-of-stock">Out of Stock</option>
+                    <option value="maintenance">For Maintenance</option>
+                </select>
+            </div>
+            <br>
+
+            <button type="submit">Add Item</button>
+        </form>
+    </section>
+
+    <hr>
+
+    <!-- ITEM LIST -->
+    <section>
+        <h2>Item List</h2>
+        <table border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Unique Code</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Condition</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>TOOL-0001</td>
+                    <td>Hammer</td>
+                    <td>Construction Tools</td>
+                    <td>10</td>
+                    <td>Available</td>
+                    <td>
+                        <button>Edit</button>
+                        <button>Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>MAT-0001</td>
+                    <td>Cement</td>
+                    <td>Construction Materials</td>
+                    <td>50</td>
+                    <td>Available</td>
+                    <td>
+                        <button>Edit</button>
+                        <button>Delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>HEAVY-0001</td>
+                    <td>Excavator</td>
+                    <td>Heavy Equipment</td>
+                    <td>1</td>
+                    <td>In Use</td>
+                    <td>
+                        <button>Edit</button>
+                        <button>Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <hr>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 Compact II Gencon Inc. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
