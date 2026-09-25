@@ -16,8 +16,8 @@
     </header>
 
     <!-- ADD ITEM FORM -->
-    <section>
-        <h2>Add New Item</h2>
+        <section>
+        <h2 id="formTitle">Add New Item</h2>
         <form>
             <div>
                 <label for="itemName">Item Name:</label><br>
@@ -75,7 +75,8 @@
             </div>
             <br>
 
-            <button type="submit">Add Item</button>
+                        <button type="submit" id="submitBtn">Add Item</button>
+            <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
         </form>
     </section>
 

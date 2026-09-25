@@ -1,18 +1,18 @@
-// ===== INVENTORY SYSTEM - DAY 7 =====
+// ===== INVENTORY SYSTEM - DAY 8 =====
 
-// Storage key
+// Storage keys
 const STORAGE_KEY = "inventory_data";
 const NEXT_ID_KEY = "inventory_next_id";
 
-// ===== LOAD DATA FROM LOCALSTORAGE =====
+// ===== EDIT MODE TRACKER =====
+let editingId = null;  // null = Add mode, number = Edit mode
+
+// ===== LOAD DATA =====
 function loadInventory() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    
     if (saved) {
-        // May naka-save na data — i-load
         return JSON.parse(saved);
     } else {
-        // Walang naka-save — gamitin ang default items
         return [
             { id: 1, code: "TOOL-0001", name: "Hammer", category: "Tools", quantity: 10, location: "", condition: "Available" },
             { id: 2, code: "MAT-0001", name: "Cement", category: "Materials", quantity: 50, location: "", condition: "Available" },
@@ -21,7 +21,7 @@ function loadInventory() {
     }
 }
 
-// ===== SAVE DATA TO LOCALSTORAGE =====
+// ===== SAVE DATA =====
 function saveInventory() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
     localStorage.setItem(NEXT_ID_KEY, nextId.toString());
@@ -30,10 +30,7 @@ function saveInventory() {
 // ===== GET NEXT ID =====
 function getNextId() {
     const saved = localStorage.getItem(NEXT_ID_KEY);
-    if (saved) {
-        return parseInt(saved);
-    }
-    // Kung wala pa, kunin yung highest ID + 1
+    if (saved) return parseInt(saved);
     if (inventory.length === 0) return 1;
     return Math.max(...inventory.map(item => item.id)) + 1;
 }
@@ -76,11 +73,10 @@ function renderTable() {
     });
 }
 
-// ===== ADD ITEM (with duplicate check!) =====
+// ===== ADD OR UPDATE ITEM =====
 function addItem(event) {
     event.preventDefault();
 
-    // Kunin yung values
     const name = document.getElementById("itemName").value.trim();
     const code = document.getElementById("uniqueCode").value.trim();
     const category = document.getElementById("category").value;
@@ -88,7 +84,7 @@ function addItem(event) {
     const location = document.getElementById("location").value.trim();
     const condition = document.getElementById("condition").value;
 
-    // Basic validation
+    // Validation
     if (!name || !code || !category || !quantity || !condition) {
         alert("⚠️ Please fill in all required fields!");
         return;
@@ -99,7 +95,41 @@ function addItem(event) {
         return;
     }
 
-    // ===== DUPLICATE CHECK =====
+    // ===== EDIT MODE: UPDATE existing item =====
+    if (editingId !== null) {
+        // Check kung may duplicate code (maliban sa item na i-edit natin)
+        const isDuplicate = inventory.some(item => 
+            item.id !== editingId && 
+            item.code.toLowerCase() === code.toLowerCase()
+        );
+
+        if (isDuplicate) {
+            alert(`❌ Unique Code "${code}" already exists! Please use a different code.`);
+            return;
+        }
+
+        // I-update yung item
+        const itemIndex = inventory.findIndex(item => item.id === editingId);
+        if (itemIndex !== -1) {
+            inventory[itemIndex] = {
+                id: editingId,
+                code: code,
+                name: name,
+                category: category,
+                quantity: quantity,
+                location: location,
+                condition: condition
+            };
+        }
+
+        saveInventory();
+        renderTable();
+        resetForm();
+        alert(`✅ "${name}" updated successfully!`);
+        return;
+    }
+
+    // ===== ADD MODE: CREATE new item =====
     const isDuplicate = inventory.some(item => 
         item.code.toLowerCase() === code.toLowerCase()
     );
@@ -109,7 +139,6 @@ function addItem(event) {
         return;
     }
 
-    // Gumawa ng bagong item
     const newItem = {
         id: nextId,
         code: code,
@@ -120,21 +149,61 @@ function addItem(event) {
         condition: condition
     };
 
-    // I-add sa inventory
     inventory.push(newItem);
     nextId++;
 
-    // I-save sa localStorage
     saveInventory();
-
-    // I-render ulit
     renderTable();
-
-    // I-clear yung form
     document.querySelector("form").reset();
-
-    // Alert
     alert(`✅ "${name}" added successfully!`);
+}
+
+// ===== EDIT ITEM (now functional!) =====
+function editItem(id) {
+    const item = inventory.find(i => i.id === id);
+    if (!item) return;
+
+    // Populate the form
+    document.getElementById("itemName").value = item.name;
+    document.getElementById("uniqueCode").value = item.code;
+    document.getElementById("category").value = item.category;
+    document.getElementById("quantity").value = item.quantity;
+    document.getElementById("location").value = item.location || "";
+    document.getElementById("condition").value = item.condition;
+
+    // Set edit mode
+    editingId = id;
+
+    // Update UI: change button text and show cancel button
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const formTitle = document.getElementById("formTitle");
+
+    if (submitBtn) submitBtn.textContent = "💾 Update Item";
+    if (cancelBtn) cancelBtn.style.display = "inline-block";
+    if (formTitle) formTitle.textContent = `✏️ Editing: ${item.name}`;
+
+    // Scroll to form
+    document.querySelector("form").scrollIntoView({ behavior: "smooth" });
+}
+
+// ===== CANCEL EDIT =====
+function cancelEdit() {
+    resetForm();
+}
+
+// ===== RESET FORM =====
+function resetForm() {
+    document.querySelector("form").reset();
+    editingId = null;
+
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const formTitle = document.getElementById("formTitle");
+
+    if (submitBtn) submitBtn.textContent = "Add Item";
+    if (cancelBtn) cancelBtn.style.display = "none";
+    if (formTitle) formTitle.textContent = "Add New Item";
 }
 
 // ===== DELETE ITEM =====
@@ -148,14 +217,14 @@ function deleteItem(id) {
     saveInventory();
     renderTable();
     alert(`🗑️ "${item.name}" deleted!`);
+
+    // Kung yung dine-delete ay yung currently naka-edit, i-reset
+    if (editingId === id) {
+        resetForm();
+    }
 }
 
-// ===== EDIT ITEM (placeholder) =====
-function editItem(id) {
-    alert("✏️ Edit feature coming soon! (Day 8)");
-}
-
-// ===== RESET DATA (for testing) =====
+// ===== RESET DATA =====
 function resetData() {
     if (!confirm("⚠️ This will DELETE all items and reset to default. Continue?")) return;
     localStorage.removeItem(STORAGE_KEY);
@@ -163,6 +232,7 @@ function resetData() {
     inventory = loadInventory();
     nextId = getNextId();
     renderTable();
+    resetForm();
     alert("🔄 Data reset to default!");
 }
 
@@ -172,10 +242,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (form) {
         form.addEventListener("submit", addItem);
     }
-
     renderTable();
 
     console.log("✅ Inventory system loaded!");
     console.log("📦 Total items:", inventory.length);
-    console.log("💾 Data stored in localStorage");
 });
