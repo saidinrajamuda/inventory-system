@@ -10,7 +10,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// ===== SAMPLE DATA =====
+// ===== SAMPLE DATA (in-memory) =====
 let inventory = [
     { id: 1, code: "TOOL-0001", name: "Hammer", category: "Tools", quantity: 10, location: "", condition: "Available" },
     { id: 2, code: "MAT-0001", name: "Cement", category: "Materials", quantity: 50, location: "", condition: "Available" },
@@ -19,20 +19,13 @@ let inventory = [
 
 let nextId = 4;
 
-// ===== ROUTES =====
+// ===== ENDPOINTS =====
 
 // Root
 app.get("/", (req, res) => {
     res.json({
         message: "📦 Inventory API is running!",
-        version: "1.0.0",
-        endpoints: [
-            "GET    /api/items",
-            "GET    /api/items/:id",
-            "POST   /api/items",
-            "PUT    /api/items/:id",
-            "DELETE /api/items/:id"
-        ]
+        version: "1.0.0"
     });
 });
 
@@ -60,7 +53,7 @@ app.get("/api/items/:id", (req, res) => {
     res.json({ success: true, data: item });
 });
 
-// POST - Create new item
+// ===== CREATE (POST) =====
 app.post("/api/items", (req, res) => {
     const { code, name, category, quantity, location, condition } = req.body;
 
@@ -68,13 +61,13 @@ app.post("/api/items", (req, res) => {
     if (!code || !name || !category || quantity === undefined || !condition) {
         return res.status(400).json({
             success: false,
-            message: "⚠️ Please provide all required fields: code, name, category, quantity, condition"
+            message: "⚠️ Missing required fields: code, name, category, quantity, condition"
         });
     }
 
-    // Check duplicate code
-    const isDuplicate = inventory.some(item =>
-        item.code.toLowerCase() === code.toLowerCase()
+    // Check for duplicate code
+    const isDuplicate = inventory.some(
+        item => item.code.toLowerCase() === code.toLowerCase()
     );
 
     if (isDuplicate) {
@@ -84,13 +77,12 @@ app.post("/api/items", (req, res) => {
         });
     }
 
-    // Create new item
     const newItem = {
         id: nextId++,
-        code,
-        name,
+        code: code.trim(),
+        name: name.trim(),
         category,
-        quantity,
+        quantity: parseInt(quantity),
         location: location || "",
         condition
     };
@@ -104,11 +96,9 @@ app.post("/api/items", (req, res) => {
     });
 });
 
-// PUT - Update item
+// ===== UPDATE (PUT) =====
 app.put("/api/items/:id", (req, res) => {
     const id = parseInt(req.params.id);
-    const { code, name, category, quantity, location, condition } = req.body;
-
     const itemIndex = inventory.findIndex(i => i.id === id);
 
     if (itemIndex === -1) {
@@ -118,10 +108,19 @@ app.put("/api/items/:id", (req, res) => {
         });
     }
 
-    // Check duplicate code (maliban sa sarili)
-    const isDuplicate = inventory.some(item =>
-        item.id !== id &&
-        item.code.toLowerCase() === code.toLowerCase()
+    const { code, name, category, quantity, location, condition } = req.body;
+
+    // Validation
+    if (!code || !name || !category || quantity === undefined || !condition) {
+        return res.status(400).json({
+            success: false,
+            message: "⚠️ Missing required fields"
+        });
+    }
+
+    // Check for duplicate code (excluding this item)
+    const isDuplicate = inventory.some(
+        item => item.id !== id && item.code.toLowerCase() === code.toLowerCase()
     );
 
     if (isDuplicate) {
@@ -134,10 +133,10 @@ app.put("/api/items/:id", (req, res) => {
     // Update
     inventory[itemIndex] = {
         id,
-        code,
-        name,
+        code: code.trim(),
+        name: name.trim(),
         category,
-        quantity,
+        quantity: parseInt(quantity),
         location: location || "",
         condition
     };
@@ -149,25 +148,24 @@ app.put("/api/items/:id", (req, res) => {
     });
 });
 
-// DELETE - Remove item
+// ===== DELETE =====
 app.delete("/api/items/:id", (req, res) => {
     const id = parseInt(req.params.id);
-    const itemIndex = inventory.findIndex(i => i.id === id);
+    const item = inventory.find(i => i.id === id);
 
-    if (itemIndex === -1) {
+    if (!item) {
         return res.status(404).json({
             success: false,
             message: `Item with ID ${id} not found`
         });
     }
 
-    const deletedItem = inventory[itemIndex];
-    inventory.splice(itemIndex, 1);
+    inventory = inventory.filter(i => i.id !== id);
 
     res.json({
         success: true,
-        message: `🗑️ "${deletedItem.name}" deleted!`,
-        data: deletedItem
+        message: `🗑️ "${item.name}" deleted successfully!`,
+        data: item
     });
 });
 
@@ -175,6 +173,6 @@ app.delete("/api/items/:id", (req, res) => {
 app.listen(PORT, () => {
     console.log("=================================");
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📦 API endpoint: http://localhost:${PORT}/api/items`);
+    console.log(`📦 API: http://localhost:${PORT}/api/items`);
     console.log("=================================");
 });

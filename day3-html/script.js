@@ -1,35 +1,17 @@
 // ===== INVENTORY SYSTEM - DAY 10 =====
-// Frontend connected to Backend API
+// Frontend connecting to backend API
 
-// API URL
 const API_URL = "http://localhost:3000/api/items";
 
 // ===== EDIT MODE TRACKER =====
 let editingId = null;
-let inventory = [];  // Magiging laman nito ay galing sa backend
-
-// ===== FETCH ALL ITEMS (READ) =====
-async function fetchItems() {
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-
-        if (data.success) {
-            inventory = data.data;
-            renderTable();
-        }
-    } catch (error) {
-        console.error("❌ Error fetching items:", error);
-        alert("⚠️ Cannot connect to server. Make sure backend is running!");
-    }
-}
 
 // ===== RENDER TABLE =====
-function renderTable() {
+function renderTable(items) {
     const tbody = document.querySelector("tbody");
     tbody.innerHTML = "";
 
-    if (inventory.length === 0) {
+    if (!items || items.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
@@ -40,7 +22,7 @@ function renderTable() {
         return;
     }
 
-    inventory.forEach(item => {
+    items.forEach(item => {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>${item.id}</td>
@@ -58,6 +40,22 @@ function renderTable() {
     });
 }
 
+// ===== LOAD ITEMS FROM BACKEND =====
+async function loadItems() {
+    try {
+        const response = await fetch(API_URL);
+        const result = await response.json();
+
+        if (result.success) {
+            renderTable(result.data);
+            console.log(`✅ Loaded ${result.count} items from backend`);
+        }
+    } catch (error) {
+        console.error("❌ Error loading items:", error);
+        alert("⚠️ Cannot connect to server. Make sure backend is running!");
+    }
+}
+
 // ===== ADD OR UPDATE ITEM =====
 async function addItem(event) {
     event.preventDefault();
@@ -69,13 +67,9 @@ async function addItem(event) {
     const location = document.getElementById("location").value.trim();
     const condition = document.getElementById("condition").value;
 
-    if (!name || !code || !category || !quantity || !condition) {
+    // Validation
+    if (!name || !code || !category || isNaN(quantity) || !condition) {
         alert("⚠️ Please fill in all required fields!");
-        return;
-    }
-
-    if (quantity < 0) {
-        alert("⚠️ Quantity cannot be negative!");
         return;
     }
 
@@ -100,46 +94,76 @@ async function addItem(event) {
             });
         }
 
-        const data = await response.json();
+        const result = await response.json();
 
-        if (!response.ok) {
-            alert(data.message || "❌ Something went wrong!");
-            return;
+        if (result.success) {
+            alert(result.message);
+            resetForm();
+            loadItems();
+        } else {
+            alert(result.message);
         }
-
-        alert(data.message);
-        await fetchItems();
-        resetForm();
-
     } catch (error) {
         console.error("❌ Error:", error);
-        alert("⚠️ Cannot connect to server.");
+        alert("⚠️ Server error. Please try again.");
     }
 }
 
 // ===== EDIT ITEM =====
-function editItem(id) {
-    const item = inventory.find(i => i.id === id);
-    if (!item) return;
+async function editItem(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}`);
+        const result = await response.json();
 
-    document.getElementById("itemName").value = item.name;
-    document.getElementById("uniqueCode").value = item.code;
-    document.getElementById("category").value = item.category;
-    document.getElementById("quantity").value = item.quantity;
-    document.getElementById("location").value = item.location || "";
-    document.getElementById("condition").value = item.condition;
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
 
-    editingId = id;
+        const item = result.data;
 
-    const submitBtn = document.getElementById("submitBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const formTitle = document.getElementById("formTitle");
+        document.getElementById("itemName").value = item.name;
+        document.getElementById("uniqueCode").value = item.code;
+        document.getElementById("category").value = item.category;
+        document.getElementById("quantity").value = item.quantity;
+        document.getElementById("location").value = item.location || "";
+        document.getElementById("condition").value = item.condition;
 
-    if (submitBtn) submitBtn.textContent = "💾 Update Item";
-    if (cancelBtn) cancelBtn.style.display = "inline-block";
-    if (formTitle) formTitle.textContent = `✏️ Editing: ${item.name}`;
+        editingId = id;
 
-    document.querySelector("form").scrollIntoView({ behavior: "smooth" });
+        const submitBtn = document.getElementById("submitBtn");
+        const cancelBtn = document.getElementById("cancelBtn");
+        const formTitle = document.getElementById("formTitle");
+
+        if (submitBtn) submitBtn.textContent = "💾 Update Item";
+        if (cancelBtn) cancelBtn.style.display = "inline-block";
+        if (formTitle) formTitle.textContent = `✏️ Editing: ${item.name}`;
+
+        document.querySelector("form").scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("⚠️ Cannot load item details.");
+    }
+}
+
+// ===== DELETE ITEM =====
+async function deleteItem(id) {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE"
+        });
+        const result = await response.json();
+
+        alert(result.message);
+        loadItems();
+
+        if (editingId === id) resetForm();
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("⚠️ Cannot delete item.");
+    }
 }
 
 // ===== CANCEL EDIT =====
@@ -161,43 +185,13 @@ function resetForm() {
     if (formTitle) formTitle.textContent = "Add New Item";
 }
 
-// ===== DELETE ITEM =====
-async function deleteItem(id) {
-    const item = inventory.find(i => i.id === id);
-    if (!item) return;
-
-    if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
-
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: "DELETE"
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            alert(data.message || "❌ Failed to delete!");
-            return;
-        }
-
-        alert(data.message);
-        await fetchItems();
-
-        if (editingId === id) resetForm();
-
-    } catch (error) {
-        console.error("❌ Error:", error);
-        alert("⚠️ Cannot connect to server.");
-    }
-}
-
 // ===== SETUP =====
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector("form");
-    if (form) form.addEventListener("submit", addItem);
+    if (form) {
+        form.addEventListener("submit", addItem);
+    }
 
-    // Load items from backend
-    fetchItems();
-
-    console.log("✅ Frontend connected to backend!");
+    loadItems();
+    console.log("✅ Frontend connected to backend API!");
 });
