@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Code - Inventory System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .scan-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .scan-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .scan-header h1 {
+            color: #1e3a5f;
+            font-size: 24px;
+        }
+
+        .scan-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .scan-result {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .scan-result.active {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-detail:last-child {
+            border-bottom: none;
+        }
+
+        .item-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .item-value {
+            color: #1e3a5f;
+            font-weight: 600;
+        }
+
+        .scan-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 20px auto;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #229954;
+        }
+
+        .btn-stop {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #c0392b;
+        }
+
+        .btn-back {
+            background: #95a5a6;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+            max-width: 300px;
+            margin: 10px auto;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status-msg {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px auto;
+            max-width: 500px;
+            font-size: 14px;
+        }
+
+        .status-info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scan-container">
+
+        <!-- HEADER -->
+        <div class="scan-header">
+            <h1>📱 Scan QR Code</h1>
+            <p>Point your camera at the item's QR code</p>
+        </div>
+
+        <!-- STATUS MESSAGE -->
+        <div id="statusMsg" class="status-msg status-info">
+            Click "Start Scanning" to begin
+        </div>
+
+        <!-- QR READER -->
+        <div id="reader"></div>
+
+        <!-- BUTTONS -->
+        <button id="startBtn" class="scan-btn btn-start" onclick="startScanning()">
+            ▶️ Start Scanning
+        </button>
+        <button id="stopBtn" class="scan-btn btn-stop" onclick="stopScanning()" style="display: none;">
+            ⏹️ Stop Scanning
+        </button>
+
+        <a href="dashboard.html" class="btn-back">← Back to Dashboard</a>
+
+        <!-- SCAN RESULT -->
+        <div id="scanResult" class="scan-result">
+            <h2 style="color: #1e3a5f; margin-bottom: 15px;">✅ Item Found</h2>
+            <div id="itemDetails"></div>
+            <button onclick="scanAnother()" class="scan-btn btn-start" style="margin-top: 15px;">
+                🔄 Scan Another Item
+            </button>
+        </div>
+
+    </div>
+
+    <!-- HTML5 QR CODE LIBRARY -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="scan.js"></script>
+
+</body>
+</html>
