@@ -34,6 +34,7 @@ function renderTable(items) {
             <td>
                 <button onclick="editItem(${item.id})">Edit</button>
                 <button onclick="deleteItem(${item.id})">Delete</button>
+                <button onclick="showQRCode(${item.id})" style="background-color: #27ae60;">QR</button>
             </td>
         `;
         tbody.appendChild(row);
@@ -183,6 +184,75 @@ function resetForm() {
     if (submitBtn) submitBtn.textContent = "Add Item";
     if (cancelBtn) cancelBtn.style.display = "none";
     if (formTitle) formTitle.textContent = "Add New Item";
+}
+
+// ===== SHOW QR CODE =====
+async function showQRCode(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}/qrcode`);
+        const result = await response.json();
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        const { item, qrCode } = result.data;
+
+        // Gumawa ng modal
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                text-align: center;
+                max-width: 400px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            ">
+                <h2 style="color: #1e3a5f; margin-bottom: 8px;">${item.name}</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">${item.code}</p>
+                <img src="${qrCode}" alt="QR Code" style="width: 300px; height: 300px;" />
+                <p style="color: #999; font-size: 12px; margin-top: 15px;">📱 Scan this QR code</p>
+                <button id="closeQRBtn" style="
+                    margin-top: 20px;
+                    padding: 10px 30px;
+                    background: #1e3a5f;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">Close</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close button
+        document.getElementById("closeQRBtn").addEventListener("click", () => {
+            modal.remove();
+        });
+
+        // Click sa labas para close
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    } catch (error) {
+        console.error("❌ QR error:", error);
+        alert("⚠️ Cannot load QR code.");
+    }
 }
 
 // ===== SETUP =====

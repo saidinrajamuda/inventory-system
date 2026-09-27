@@ -1,6 +1,7 @@
 // ===== INVENTORY BACKEND - DAY 11 (with MySQL) =====
 
 const express = require("express");
+const QRCode = require("qrcode");
 const cors = require("cors");
 const { promisePool, testConnection } = require("./db");
 
@@ -187,6 +188,59 @@ app.delete("/api/items/:id", async (req, res) => {
     } catch (error) {
         console.error("DELETE /api/items/:id error:", error);
         res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ===== QR CODE GENERATION =====
+app.get("/api/items/:id/qrcode", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+
+        // Kunin yung item mula sa database
+        const [rows] = await promisePool.query(
+            "SELECT id, code, name FROM items WHERE id = ?",
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `Item with ID ${id} not found`
+            });
+        }
+
+        const item = rows[0];
+
+        // Gumawa ng QR code na naglalaman ng JSON data
+        const qrData = JSON.stringify({
+            id: item.id,
+            code: item.code,
+            name: item.name
+        });
+
+        // Generate QR code as Data URL (base64 image)
+        const qrImage = await QRCode.toDataURL(qrData, {
+            width: 300,
+            margin: 2,
+            color: {
+                dark: "#1e3a5f",
+                light: "#ffffff"
+            }
+        });
+
+        res.json({
+            success: true,
+            data: {
+                item: item,
+                qrCode: qrImage
+            }
+        });
+    } catch (error) {
+        console.error("QR code generation error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 });
 
