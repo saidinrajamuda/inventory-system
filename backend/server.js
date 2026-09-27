@@ -1,178 +1,211 @@
-// ===== INVENTORY BACKEND - DAY 10 =====
+// ===== INVENTORY BACKEND - DAY 11 (with MySQL) =====
 
 const express = require("express");
 const cors = require("cors");
+const { promisePool, testConnection } = require("./db");
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ===== SAMPLE DATA (in-memory) =====
-let inventory = [
-    { id: 1, code: "TOOL-0001", name: "Hammer", category: "Tools", quantity: 10, location: "", condition: "Available" },
-    { id: 2, code: "MAT-0001", name: "Cement", category: "Materials", quantity: 50, location: "", condition: "Available" },
-    { id: 3, code: "HEAVY-0001", name: "Excavator", category: "Heavy Equipment", quantity: 1, location: "", condition: "In Use" }
-];
-
-let nextId = 4;
-
-// ===== ENDPOINTS =====
-
-// Root
+// ===== ROOT =====
 app.get("/", (req, res) => {
     res.json({
-        message: "📦 Inventory API is running!",
-        version: "1.0.0"
+        message: "📦 Inventory API with MySQL is running!",
+        version: "2.0.0"
     });
 });
 
-// GET all items
-app.get("/api/items", (req, res) => {
-    res.json({
-        success: true,
-        count: inventory.length,
-        data: inventory
-    });
-});
-
-// GET single item
-app.get("/api/items/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    const item = inventory.find(i => i.id === id);
-
-    if (!item) {
-        return res.status(404).json({
-            success: false,
-            message: `Item with ID ${id} not found`
+// ===== GET ALL ITEMS =====
+app.get("/api/items", async (req, res) => {
+    try {
+        const [rows] = await promisePool.query(
+            "SELECT id, code, name, category, quantity, location, condition_status AS `condition` FROM items ORDER BY id ASC"
+        );
+        res.json({
+            success: true,
+            count: rows.length,
+            data: rows
         });
+    } catch (error) {
+        console.error("GET /api/items error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
+});
 
-    res.json({ success: true, data: item });
+// ===== GET SINGLE ITEM =====
+app.get("/api/items/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const [rows] = await promisePool.query(
+            "SELECT id, code, name, category, quantity, location, condition_status AS `condition` FROM items WHERE id = ?",
+            [id]
+        );
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `Item with ID ${id} not found`
+            });
+        }
+        res.json({ success: true, data: rows[0] });
+    } catch (error) {
+        console.error("GET /api/items/:id error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 // ===== CREATE (POST) =====
-app.post("/api/items", (req, res) => {
-    const { code, name, category, quantity, location, condition } = req.body;
+app.post("/api/items", async (req, res) => {
+    try {
+        const { code, name, category, quantity, location, condition } = req.body;
 
-    // Validation
-    if (!code || !name || !category || quantity === undefined || !condition) {
-        return res.status(400).json({
-            success: false,
-            message: "⚠️ Missing required fields: code, name, category, quantity, condition"
+        if (!code || !name || !category || quantity === undefined || !condition) {
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ Missing required fields"
+            });
+        }
+
+        const [existing] = await promisePool.query(
+            "SELECT id FROM items WHERE code = ?",
+            [code.trim()]
+        );
+
+        if (existing.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `❌ Unique Code "${code}" already exists!`
+            });
+        }
+
+        const [result] = await promisePool.query(
+            "INSERT INTO items (code, name, category, quantity, location, condition_status) VALUES (?, ?, ?, ?, ?, ?)",
+            [code.trim(), name.trim(), category, parseInt(quantity), location || "", condition]
+        );
+
+        const [newItem] = await promisePool.query(
+            "SELECT id, code, name, category, quantity, location, condition_status AS `condition` FROM items WHERE id = ?",
+            [result.insertId]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: `✅ "${name}" added successfully!`,
+            data: newItem[0]
         });
+    } catch (error) {
+        console.error("POST /api/items error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
-
-    // Check for duplicate code
-    const isDuplicate = inventory.some(
-        item => item.code.toLowerCase() === code.toLowerCase()
-    );
-
-    if (isDuplicate) {
-        return res.status(409).json({
-            success: false,
-            message: `❌ Unique Code "${code}" already exists!`
-        });
-    }
-
-    const newItem = {
-        id: nextId++,
-        code: code.trim(),
-        name: name.trim(),
-        category,
-        quantity: parseInt(quantity),
-        location: location || "",
-        condition
-    };
-
-    inventory.push(newItem);
-
-    res.status(201).json({
-        success: true,
-        message: `✅ "${name}" added successfully!`,
-        data: newItem
-    });
 });
 
 // ===== UPDATE (PUT) =====
-app.put("/api/items/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    const itemIndex = inventory.findIndex(i => i.id === id);
+app.put("/api/items/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { code, name, category, quantity, location, condition } = req.body;
 
-    if (itemIndex === -1) {
-        return res.status(404).json({
-            success: false,
-            message: `Item with ID ${id} not found`
+        if (!code || !name || !category || quantity === undefined || !condition) {
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ Missing required fields"
+            });
+        }
+
+        const [existing] = await promisePool.query(
+            "SELECT id FROM items WHERE id = ?",
+            [id]
+        );
+
+        if (existing.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `Item with ID ${id} not found`
+            });
+        }
+
+        const [duplicate] = await promisePool.query(
+            "SELECT id FROM items WHERE code = ? AND id != ?",
+            [code.trim(), id]
+        );
+
+        if (duplicate.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `❌ Unique Code "${code}" already exists!`
+            });
+        }
+
+        await promisePool.query(
+            "UPDATE items SET code = ?, name = ?, category = ?, quantity = ?, location = ?, condition_status = ? WHERE id = ?",
+            [code.trim(), name.trim(), category, parseInt(quantity), location || "", condition, id]
+        );
+
+        const [updated] = await promisePool.query(
+            "SELECT id, code, name, category, quantity, location, condition_status AS `condition` FROM items WHERE id = ?",
+            [id]
+        );
+
+        res.json({
+            success: true,
+            message: `✅ "${name}" updated successfully!`,
+            data: updated[0]
         });
+    } catch (error) {
+        console.error("PUT /api/items/:id error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
-
-    const { code, name, category, quantity, location, condition } = req.body;
-
-    // Validation
-    if (!code || !name || !category || quantity === undefined || !condition) {
-        return res.status(400).json({
-            success: false,
-            message: "⚠️ Missing required fields"
-        });
-    }
-
-    // Check for duplicate code (excluding this item)
-    const isDuplicate = inventory.some(
-        item => item.id !== id && item.code.toLowerCase() === code.toLowerCase()
-    );
-
-    if (isDuplicate) {
-        return res.status(409).json({
-            success: false,
-            message: `❌ Unique Code "${code}" already exists!`
-        });
-    }
-
-    // Update
-    inventory[itemIndex] = {
-        id,
-        code: code.trim(),
-        name: name.trim(),
-        category,
-        quantity: parseInt(quantity),
-        location: location || "",
-        condition
-    };
-
-    res.json({
-        success: true,
-        message: `✅ "${name}" updated successfully!`,
-        data: inventory[itemIndex]
-    });
 });
 
 // ===== DELETE =====
-app.delete("/api/items/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    const item = inventory.find(i => i.id === id);
+app.delete("/api/items/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
 
-    if (!item) {
-        return res.status(404).json({
-            success: false,
-            message: `Item with ID ${id} not found`
+        const [rows] = await promisePool.query(
+            "SELECT name FROM items WHERE id = ?",
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `Item with ID ${id} not found`
+            });
+        }
+
+        const itemName = rows[0].name;
+
+        await promisePool.query("DELETE FROM items WHERE id = ?", [id]);
+
+        res.json({
+            success: true,
+            message: `🗑️ "${itemName}" deleted successfully!`
         });
+    } catch (error) {
+        console.error("DELETE /api/items/:id error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
-
-    inventory = inventory.filter(i => i.id !== id);
-
-    res.json({
-        success: true,
-        message: `🗑️ "${item.name}" deleted successfully!`,
-        data: item
-    });
 });
 
 // ===== START SERVER =====
-app.listen(PORT, () => {
-    console.log("=================================");
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📦 API: http://localhost:${PORT}/api/items`);
-    console.log("=================================");
-});
+async function startServer() {
+    const connected = await testConnection();
+
+    if (!connected) {
+        console.error("❌ Cannot start server without database connection.");
+        process.exit(1);
+    }
+
+    app.listen(PORT, () => {
+        console.log("=================================");
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📦 API: http://localhost:${PORT}/api/items`);
+        console.log(`🗄️  Database: inventory_db`);
+        console.log("=================================");
+    });
+}
+
+startServer();

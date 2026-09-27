@@ -7,12 +7,17 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["inventory", "api", "express"],
+  "keywords": [
+    "inventory",
+    "api",
+    "express"
+  ],
   "author": "Saidin Rajamuda",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "mysql2": "^3.24.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
