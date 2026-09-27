@@ -244,6 +244,67 @@ app.get("/api/items/:id/qrcode", async (req, res) => {
     }
 });
 
+// ===== VERIFICATIONS =====
+
+// CREATE verification record
+app.post("/api/verifications", async (req, res) => {
+    try {
+        const { item_id, expected_qty, actual_qty, remarks, verified_by } = req.body;
+
+        if (!item_id || expected_qty === undefined || actual_qty === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ Missing required fields"
+            });
+        }
+
+        const status = (parseInt(expected_qty) === parseInt(actual_qty))
+            ? "Matched"
+            : "Discrepancy";
+
+        const [result] = await promisePool.query(
+            `INSERT INTO verifications 
+            (item_id, expected_qty, actual_qty, status, remarks, verified_by) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                item_id,
+                parseInt(expected_qty),
+                parseInt(actual_qty),
+                status,
+                remarks || "",
+                verified_by || "Warehouse Personnel"
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: status === "Matched"
+                ? "✅ Quantities match! Record saved."
+                : "⚠️ Discrepancy detected! Record saved.",
+            data: { id: result.insertId, item_id, expected_qty, actual_qty, status, remarks, verified_by }
+        });
+    } catch (error) {
+        console.error("POST /api/verifications error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// GET all verifications
+app.get("/api/verifications", async (req, res) => {
+    try {
+        const [rows] = await promisePool.query(
+            `SELECT v.*, i.code, i.name 
+             FROM verifications v
+             JOIN items i ON v.item_id = i.id
+             ORDER BY v.created_at DESC`
+        );
+        res.json({ success: true, count: rows.length, data: rows });
+    } catch (error) {
+        console.error("GET /api/verifications error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ===== START SERVER =====
 async function startServer() {
     const connected = await testConnection();

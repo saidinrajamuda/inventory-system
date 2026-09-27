@@ -177,8 +177,46 @@
         <!-- SCAN RESULT -->
         <div id="scanResult" class="scan-result">
             <h2 style="color: #1e3a5f; margin-bottom: 15px;">✅ Item Found</h2>
-            <div id="itemDetails"></div>
-            <button onclick="scanAnother()" class="scan-btn btn-start" style="margin-top: 15px;">
+                        <div id="itemDetails"></div>
+
+            <!-- PHYSICAL COUNT INPUT -->
+            <div style="margin-top: 20px; padding: 20px; background: #f4f6f8; border-radius: 8px; text-align: left;">
+                <h3 style="color: #1e3a5f; margin-bottom: 15px; font-size: 16px;">
+                    📊 Physical Count Verification
+                </h3>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; color: #444; margin-bottom: 5px; font-size: 14px;">
+                        Expected Quantity (from system):
+                    </label>
+                    <input type="number" id="expectedQty" readonly
+                           style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; background: #e9ecef;">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; color: #444; margin-bottom: 5px; font-size: 14px;">
+                        Actual Quantity (physical count):
+                    </label>
+                    <input type="number" id="actualQty" min="0" placeholder="Enter actual count"
+                           style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; color: #444; margin-bottom: 5px; font-size: 14px;">
+                        Remarks (optional):
+                    </label>
+                    <textarea id="remarks" rows="2" placeholder="e.g. Found 2 damaged items"
+                              style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; font-family: inherit;"></textarea>
+                </div>
+
+                <div id="verificationStatus" style="display: none; padding: 12px; border-radius: 5px; margin-bottom: 15px; font-weight: 600; text-align: center;"></div>
+
+                <button onclick="submitVerification()" class="scan-btn btn-start" style="max-width: 100%;">
+                    💾 Save Verification Record
+                </button>
+            </div>
+
+            <button onclick="scanAnother()" class="scan-btn btn-start" style="margin-top: 15px; background: #95a5a6;">
                 🔄 Scan Another Item
             </button>
         </div>

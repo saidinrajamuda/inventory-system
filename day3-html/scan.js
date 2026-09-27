@@ -3,6 +3,7 @@
 const API_URL = "http://localhost:3000/api/items";
 let html5QrCode = null;
 let isScanning = false;
+let currentItem = null;
 
 // ===== UPDATE STATUS MESSAGE =====
 function updateStatus(message, type = "info") {
@@ -118,7 +119,8 @@ function onScanError(errorMessage) {
 function displayItem(item) {
     const resultEl = document.getElementById("scanResult");
     const detailsEl = document.getElementById("itemDetails");
-
+    // I-store yung current item
+    currentItem = item;
     detailsEl.innerHTML = `
         <div class="item-detail">
             <span class="item-label">Unique Code:</span>
@@ -151,6 +153,10 @@ function displayItem(item) {
 
     // Scroll sa result
     resultEl.scrollIntoView({ behavior: "smooth" });
+
+        // I-set yung expected quantity input
+    const expectedInput = document.getElementById("expectedQty");
+    if (expectedInput) expectedInput.value = item.quantity;
 }
 
 // ===== SCAN ANOTHER =====
@@ -168,3 +174,70 @@ window.addEventListener("beforeunload", () => {
 });
 
 console.log("✅ Scan page loaded!");
+
+// ===== SUBMIT VERIFICATION =====
+async function submitVerification() {
+    if (!currentItem) {
+        alert("⚠️ No item selected. Please scan a QR code first.");
+        return;
+    }
+
+    const actualQtyInput = document.getElementById("actualQty");
+    const actualQty = actualQtyInput.value.trim();
+    const remarks = document.getElementById("remarks").value.trim();
+
+    if (actualQty === "" || isNaN(parseInt(actualQty))) {
+        alert("⚠️ Please enter the actual physical count.");
+        actualQtyInput.focus();
+        return;
+    }
+
+    if (parseInt(actualQty) < 0) {
+        alert("⚠️ Quantity cannot be negative.");
+        return;
+    }
+
+    const expectedQty = currentItem.quantity;
+    const statusEl = document.getElementById("verificationStatus");
+    const isMatched = parseInt(actualQty) === parseInt(expectedQty);
+
+    try {
+        const response = await fetch("http://localhost:3000/api/verifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                item_id: currentItem.id,
+                expected_qty: parseInt(expectedQty),
+                actual_qty: parseInt(actualQty),
+                remarks: remarks,
+                verified_by: "Warehouse Personnel"
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            statusEl.style.display = "block";
+
+            if (isMatched) {
+                statusEl.style.background = "#e8f5e9";
+                statusEl.style.color = "#2e7d32";
+                statusEl.textContent = "✅ MATCHED — Quantities match. Record saved.";
+            } else {
+                statusEl.style.background = "#ffebee";
+                statusEl.style.color = "#c62828";
+                statusEl.textContent = `⚠️ DISCREPANCY — Expected: ${expectedQty}, Actual: ${actualQty}. Record saved for review.`;
+            }
+
+            document.getElementById("actualQty").value = "";
+            document.getElementById("remarks").value = "";
+
+            setTimeout(() => { statusEl.style.display = "none"; }, 5000);
+        } else {
+            alert("❌ " + result.message);
+        }
+    } catch (error) {
+        console.error("Verification error:", error);
+        alert("⚠️ Cannot save verification. Check server connection.");
+    }
+}
