@@ -1,43 +1,28 @@
-// ===== INVENTORY SYSTEM - DAY 8 =====
+// ===== INVENTORY SYSTEM - DAY 10 =====
+// Frontend connected to Backend API
 
-// Storage keys
-const STORAGE_KEY = "inventory_data";
-const NEXT_ID_KEY = "inventory_next_id";
+// API URL
+const API_URL = "http://localhost:3000/api/items";
 
 // ===== EDIT MODE TRACKER =====
-let editingId = null;  // null = Add mode, number = Edit mode
+let editingId = null;
+let inventory = [];  // Magiging laman nito ay galing sa backend
 
-// ===== LOAD DATA =====
-function loadInventory() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-        return JSON.parse(saved);
-    } else {
-        return [
-            { id: 1, code: "TOOL-0001", name: "Hammer", category: "Tools", quantity: 10, location: "", condition: "Available" },
-            { id: 2, code: "MAT-0001", name: "Cement", category: "Materials", quantity: 50, location: "", condition: "Available" },
-            { id: 3, code: "HEAVY-0001", name: "Excavator", category: "Heavy Equipment", quantity: 1, location: "", condition: "In Use" }
-        ];
+// ===== FETCH ALL ITEMS (READ) =====
+async function fetchItems() {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (data.success) {
+            inventory = data.data;
+            renderTable();
+        }
+    } catch (error) {
+        console.error("❌ Error fetching items:", error);
+        alert("⚠️ Cannot connect to server. Make sure backend is running!");
     }
 }
-
-// ===== SAVE DATA =====
-function saveInventory() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-    localStorage.setItem(NEXT_ID_KEY, nextId.toString());
-}
-
-// ===== GET NEXT ID =====
-function getNextId() {
-    const saved = localStorage.getItem(NEXT_ID_KEY);
-    if (saved) return parseInt(saved);
-    if (inventory.length === 0) return 1;
-    return Math.max(...inventory.map(item => item.id)) + 1;
-}
-
-// ===== INITIALIZE =====
-let inventory = loadInventory();
-let nextId = getNextId();
 
 // ===== RENDER TABLE =====
 function renderTable() {
@@ -74,7 +59,7 @@ function renderTable() {
 }
 
 // ===== ADD OR UPDATE ITEM =====
-function addItem(event) {
+async function addItem(event) {
     event.preventDefault();
 
     const name = document.getElementById("itemName").value.trim();
@@ -84,7 +69,6 @@ function addItem(event) {
     const location = document.getElementById("location").value.trim();
     const condition = document.getElementById("condition").value;
 
-    // Validation
     if (!name || !code || !category || !quantity || !condition) {
         alert("⚠️ Please fill in all required fields!");
         return;
@@ -95,75 +79,49 @@ function addItem(event) {
         return;
     }
 
-    // ===== EDIT MODE: UPDATE existing item =====
-    if (editingId !== null) {
-        // Check kung may duplicate code (maliban sa item na i-edit natin)
-        const isDuplicate = inventory.some(item => 
-            item.id !== editingId && 
-            item.code.toLowerCase() === code.toLowerCase()
-        );
+    const itemData = { code, name, category, quantity, location, condition };
 
-        if (isDuplicate) {
-            alert(`❌ Unique Code "${code}" already exists! Please use a different code.`);
+    try {
+        let response;
+
+        if (editingId !== null) {
+            // UPDATE
+            response = await fetch(`${API_URL}/${editingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(itemData)
+            });
+        } else {
+            // CREATE
+            response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(itemData)
+            });
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "❌ Something went wrong!");
             return;
         }
 
-        // I-update yung item
-        const itemIndex = inventory.findIndex(item => item.id === editingId);
-        if (itemIndex !== -1) {
-            inventory[itemIndex] = {
-                id: editingId,
-                code: code,
-                name: name,
-                category: category,
-                quantity: quantity,
-                location: location,
-                condition: condition
-            };
-        }
-
-        saveInventory();
-        renderTable();
+        alert(data.message);
+        await fetchItems();
         resetForm();
-        alert(`✅ "${name}" updated successfully!`);
-        return;
+
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("⚠️ Cannot connect to server.");
     }
-
-    // ===== ADD MODE: CREATE new item =====
-    const isDuplicate = inventory.some(item => 
-        item.code.toLowerCase() === code.toLowerCase()
-    );
-
-    if (isDuplicate) {
-        alert(`❌ Unique Code "${code}" already exists! Please use a different code.`);
-        return;
-    }
-
-    const newItem = {
-        id: nextId,
-        code: code,
-        name: name,
-        category: category,
-        quantity: quantity,
-        location: location,
-        condition: condition
-    };
-
-    inventory.push(newItem);
-    nextId++;
-
-    saveInventory();
-    renderTable();
-    document.querySelector("form").reset();
-    alert(`✅ "${name}" added successfully!`);
 }
 
-// ===== EDIT ITEM (now functional!) =====
+// ===== EDIT ITEM =====
 function editItem(id) {
     const item = inventory.find(i => i.id === id);
     if (!item) return;
 
-    // Populate the form
     document.getElementById("itemName").value = item.name;
     document.getElementById("uniqueCode").value = item.code;
     document.getElementById("category").value = item.category;
@@ -171,10 +129,8 @@ function editItem(id) {
     document.getElementById("location").value = item.location || "";
     document.getElementById("condition").value = item.condition;
 
-    // Set edit mode
     editingId = id;
 
-    // Update UI: change button text and show cancel button
     const submitBtn = document.getElementById("submitBtn");
     const cancelBtn = document.getElementById("cancelBtn");
     const formTitle = document.getElementById("formTitle");
@@ -183,7 +139,6 @@ function editItem(id) {
     if (cancelBtn) cancelBtn.style.display = "inline-block";
     if (formTitle) formTitle.textContent = `✏️ Editing: ${item.name}`;
 
-    // Scroll to form
     document.querySelector("form").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -207,43 +162,42 @@ function resetForm() {
 }
 
 // ===== DELETE ITEM =====
-function deleteItem(id) {
+async function deleteItem(id) {
     const item = inventory.find(i => i.id === id);
     if (!item) return;
 
     if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
 
-    inventory = inventory.filter(i => i.id !== id);
-    saveInventory();
-    renderTable();
-    alert(`🗑️ "${item.name}" deleted!`);
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE"
+        });
 
-    // Kung yung dine-delete ay yung currently naka-edit, i-reset
-    if (editingId === id) {
-        resetForm();
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "❌ Failed to delete!");
+            return;
+        }
+
+        alert(data.message);
+        await fetchItems();
+
+        if (editingId === id) resetForm();
+
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("⚠️ Cannot connect to server.");
     }
-}
-
-// ===== RESET DATA =====
-function resetData() {
-    if (!confirm("⚠️ This will DELETE all items and reset to default. Continue?")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(NEXT_ID_KEY);
-    inventory = loadInventory();
-    nextId = getNextId();
-    renderTable();
-    resetForm();
-    alert("🔄 Data reset to default!");
 }
 
 // ===== SETUP =====
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector("form");
-    if (form) {
-        form.addEventListener("submit", addItem);
-    }
-    renderTable();
+    if (form) form.addEventListener("submit", addItem);
 
-    console.log("✅ Inventory system loaded!");
-    console.log("📦 Total items:", inventory.length);
+    // Load items from backend
+    fetchItems();
+
+    console.log("✅ Frontend connected to backend!");
 });
