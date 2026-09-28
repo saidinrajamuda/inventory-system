@@ -8,6 +8,11 @@ const { promisePool, testConnection } = require("./db");
 const app = express();
 const PORT = 3000;
 
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = "compact2-inventory-secret-key-2026";  // Change this in production!
+
 app.use(cors());
 app.use(express.json());
 
@@ -321,6 +326,138 @@ async function startServer() {
         console.log(`🗄️  Database: inventory_db`);
         console.log("=================================");
     });
+
+// ===== AUTHENTICATION =====
+
+// Register new user
+app.post("/api/auth/register", async (req, res) => {
+    try {
+        const { username, email, password, full_name, role } = req.body;
+
+        // Validation
+        if (!username || !email || !password || !full_name) {
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ All fields are required"
+            });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ Password must be at least 6 characters"
+            });
+        }
+
+        // Check existing user
+        const [existing] = await promisePool.query(
+            "SELECT id FROM users WHERE username = ? OR email = ?",
+            [username, email]
+        );
+
+        if (existing.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: "❌ Username or email already exists"
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert user
+        const [result] = await promisePool.query(
+            "INSERT INTO users (username, email, password, full_name, role) VALUES (?, ?, ?, ?, ?)",
+            [username, email, hashedPassword, full_name, role || "Personnel"]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "✅ User registered successfully!",
+            data: { id: result.insertId, username, email, full_name, role: role || "Personnel" }
+        });
+    } catch (error) {
+        console.error("Register error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Login
+app.post("/api/auth/login", async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ Username and password are required"
+            });
+        }
+
+        // Find user
+        const [users] = await promisePool.query(
+            "SELECT * FROM users WHERE username = ? OR email = ?",
+            [username, username]
+        );
+
+        if (users.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: "❌ Invalid credentials"
+            });
+        }
+
+        const user = users[0];
+
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "❌ Invalid credentials"
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user.id, username: user.username, role: user.role },
+            JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        res.json({
+            success: true,
+            message: "✅ Login successful!",
+            data: {
+                token,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    full_name: user.full_name,
+                    role: user.role
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get all users (for admin)
+app.get("/api/users", async (req, res) => {
+    try {
+        const [users] = await promisePool.query(
+            "SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id"
+        );
+        res.json({ success: true, count: users.length, data: users });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});    
+
 }
 
 startServer();

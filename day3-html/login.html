@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Inventory System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #1e3a5f;
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1e3a5f;
+            box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #2c5282;
+        }
+
+        .btn-login:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .toggle-link a {
+            color: #1e3a5f;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-msg {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-msg.active {
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .role-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+
+        <!-- LOGIN FORM -->
+        <div id="loginForm">
+            <div class="login-header">
+                <h1>📦 Inventory System</h1>
+                <p>Compact II Gencon Inc.</p>
+            </div>
+
+            <div id="loginError" class="error-msg"></div>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">Username or Email</label>
+                    <input type="text" id="loginUsername" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
+            </form>
+
+            <div class="toggle-link">
+                Wala pang account? <a onclick="showRegister()">Register here</a>
+            </div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="registerForm" class="hidden">
+            <div class="login-header">
+                <h1>📝 Create Account</h1>
+                <p>For Compact II Inventory System</p>
+            </div>
+
+            <div id="registerError" class="error-msg"></div>
+
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="regFullName">Full Name</label>
+                    <input type="text" id="regFullName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regUsername">Username</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Password (min 6 chars)</label>
+                    <input type="password" id="regPassword" minlength="6" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regRole">Role</label>
+                    <select id="regRole" class="role-select" required>
+                        <option value="Personnel">Inventory Personnel</option>
+                        <option value="Admin">Admin / Manager</option>
+                        <option value="Management">Management</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-login" id="registerBtn">Register</button>
+            </form>
+
+            <div class="toggle-link">
+                May account na? <a onclick="showLogin()">Login here</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000/api";
+
+        // ===== SHOW/HIDE FORMS =====
+        function showRegister() {
+            document.getElementById("loginForm").classList.add("hidden");
+            document.getElementById("registerForm").classList.remove("hidden");
+        }
+
+        function showLogin() {
+            document.getElementById("registerForm").classList.add("hidden");
+            document.getElementById("loginForm").classList.remove("hidden");
+        }
+
+        // ===== SHOW ERROR =====
+        function showError(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.add("active");
+            setTimeout(() => el.classList.remove("active"), 5000);
+        }
+
+        // ===== HANDLE LOGIN =====
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("loginUsername").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            const btn = document.getElementById("loginBtn");
+
+            btn.disabled = true;
+            btn.textContent = "Signing in...";
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // I-save yung token at user info sa localStorage
+                    localStorage.setItem("authToken", result.data.token);
+                    localStorage.setItem("currentUser", JSON.stringify(result.data.user));
+
+                    alert(`✅ Welcome, ${result.data.user.full_name}!`);
+
+                    // Redirect sa dashboard
+                    window.location.href = "dashboard.html";
+                } else {
+                    showError("loginError", result.message);
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                showError("loginError", "⚠️ Cannot connect to server");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Sign In";
+            }
+        }
+
+        // ===== HANDLE REGISTER =====
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const full_name = document.getElementById("regFullName").value.trim();
+            const username = document.getElementById("regUsername").value.trim();
+            const email = document.getElementById("regEmail").value.trim();
+            const password = document.getElementById("regPassword").value;
+            const role = document.getElementById("regRole").value;
+            const btn = document.getElementById("registerBtn");
+
+            btn.disabled = true;
+            btn.textContent = "Registering...";
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password, full_name, role })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("✅ Registered successfully! Please login.");
+                    showLogin();
+                    document.querySelector("#registerForm form").reset();
+                } else {
+                    showError("registerError", result.message);
+                }
+            } catch (error) {
+                console.error("Register error:", error);
+                showError("registerError", "⚠️ Cannot connect to server");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Register";
+            }
+        }
+
+        // ===== CHECK IF ALREADY LOGGED IN =====
+        if (localStorage.getItem("authToken")) {
+            window.location.href = "dashboard.html";
+        }
+    </script>
+
+</body>
+</html>
