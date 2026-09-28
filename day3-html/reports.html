@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Inventory System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📦 Inventory</h2>
+                <p>Compact II Gencon Inc.</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">📊 Dashboard</a>
+                <a href="index.html">📝 Add Item</a>
+                <a href="#">📋 Item List</a>
+                <a href="#">📤 Issue/Release</a>
+                <a href="scan.html">📱 Scan QR</a>
+                <a href="#">⚠️ Discrepancies</a>
+                <a href="reports.html" class="active">📈 Reports</a>
+                <a href="#">👥 Users</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <h1>📈 Reports</h1>
+                <div class="user-info">
+                    <span>👤 Admin</span>
+                </div>
+            </header>
+
+            <!-- FILTERS -->
+            <section class="content-card" style="margin-bottom: 20px;">
+                <h2>🔎 Filters</h2>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #666;">Status:</label>
+                        <select id="filterStatus" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;">
+                            <option value="all">All Status</option>
+                            <option value="Matched">✅ Matched</option>
+                            <option value="Discrepancy">⚠️ Discrepancy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #666;">Date From:</label>
+                        <input type="date" id="filterDateFrom" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #666;">Date To:</label>
+                        <input type="date" id="filterDateTo" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;">
+                    </div>
+                    <button onclick="applyFilters()" style="padding: 10px 20px; background: #1e3a5f; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        Apply Filters
+                    </button>
+                    <button onclick="clearFilters()" style="padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        Clear
+                    </button>
+                </div>
+            </section>
+
+            <!-- SUMMARY -->
+            <section class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-info">
+                        <h3 id="totalRecords">—</h3>
+                        <p>Total Records</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3 id="totalMatched">—</h3>
+                        <p>Matched</p>
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-info">
+                        <h3 id="totalDiscrepancies">—</h3>
+                        <p>Discrepancies</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACTIONS -->
+            <section class="content-card" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">📄 Verification Report</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="exportCSV()" style="padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                            ⬇️ Export CSV
+                        </button>
+                        <button onclick="printReport()" style="padding: 10px 20px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                            🖨️ Print Report
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REPORT TABLE -->
+            <section class="content-card">
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Item Code</th>
+                            <th>Item Name</th>
+                            <th>Expected</th>
+                            <th>Actual</th>
+                            <th>Status</th>
+                            <th>Verified By</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="reports.js"></script>
+
+</body>
+</html>
