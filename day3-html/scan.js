@@ -82,7 +82,9 @@ async function onScanSuccess(decodedText) {
         }
 
         // Hanapin yung item sa backend
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (!result.success) {
@@ -204,7 +206,7 @@ async function submitVerification() {
     try {
         const response = await fetch("http://localhost:3000/api/verifications", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeaders(),
             body: JSON.stringify({
                 item_id: currentItem.id,
                 expected_qty: parseInt(expectedQty),

@@ -1,4 +1,4 @@
-// ===== DASHBOARD - DAY 15 =====
+// ===== DASHBOARD - DAY 18 (with RBAC) =====
 
 const API_ITEMS = "http://localhost:3000/api/items";
 const API_VERIFICATIONS = "http://localhost:3000/api/verifications";
@@ -6,26 +6,26 @@ const API_VERIFICATIONS = "http://localhost:3000/api/verifications";
 // ===== LOAD STATS =====
 async function loadStats() {
     try {
-        const response = await fetch(API_ITEMS);
+        const response = await fetch(API_ITEMS, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (!result.success) return;
 
         const items = result.data;
 
-        // Total items
         document.getElementById("totalItems").textContent = items.length;
 
-        // Available items
         const available = items.filter(i => i.condition === "Available").length;
         document.getElementById("availableItems").textContent = available;
 
-        // Low stock (quantity < 10)
         const lowStock = items.filter(i => i.quantity < 10).length;
         document.getElementById("lowStock").textContent = lowStock;
 
-        // Discrepancies (from verifications)
-        const vResponse = await fetch(API_VERIFICATIONS);
+        const vResponse = await fetch(API_VERIFICATIONS, {
+            headers: authHeaders()
+        });
         const vResult = await vResponse.json();
 
         if (vResult.success) {
@@ -33,7 +33,6 @@ async function loadStats() {
             document.getElementById("discrepancies").textContent = discrepancies;
         }
 
-        // Update last updated time
         const now = new Date();
         document.getElementById("lastUpdated").textContent = 
             `Updated: ${now.toLocaleTimeString()}`;
@@ -48,7 +47,9 @@ async function loadVerifications() {
     const tbody = document.getElementById("verificationsTable");
 
     try {
-        const response = await fetch(API_VERIFICATIONS);
+        const response = await fetch(API_VERIFICATIONS, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
@@ -62,7 +63,6 @@ async function loadVerifications() {
             return;
         }
 
-        // I-display lang yung 10 recent
         const recent = result.data.slice(0, 10);
 
         tbody.innerHTML = recent.map(v => {
@@ -112,9 +112,12 @@ function refreshDashboard() {
 
 // ===== INITIALIZE =====
 document.addEventListener("DOMContentLoaded", () => {
-    refreshDashboard();
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
+        return;
+    }
 
-    // Auto-refresh every 5 seconds (para real-time feel)
+    refreshDashboard();
     setInterval(refreshDashboard, 5000);
 
     console.log("✅ Dashboard loaded with real-time monitoring!");

@@ -3,148 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory Management System</title>
+    <title>Add Item - Inventory System</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- HEADER -->
-    <header>
-        <h1>Inventory Management System</h1>
-        <p>Compact II Gencon Inc.</p>
-        <hr>
-    </header>
+    <div class="app-layout">
 
-    <!-- ADD ITEM FORM -->
-        <section>
-        <h2 id="formTitle">Add New Item</h2>
-        <form>
-            <div>
-                <label for="itemName">Item Name:</label><br>
-                <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📦 Inventory</h2>
+                <p>Compact II Gencon Inc.</p>
             </div>
-            <br>
 
-            <div>
-                <label for="uniqueCode">Unique Code:</label><br>
-                <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
-            </div>
-            <br>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">📊 Dashboard</a>
+                <a href="index.html" class="active">📝 Add Item</a>
+                <a href="#">📋 Item List</a>
+                <a href="#">📤 Issue/Release</a>
+                <a href="scan.html">📱 Scan QR</a>
+                <a href="#">⚠️ Discrepancies</a>
+                <a href="reports.html">📈 Reports</a>
+                <a href="#">👥 Users</a>
+                <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
+            </nav>
+        </aside>
 
-            <div>
-                <label for="category">Category:</label><br>
-                <select id="category" name="category" required>
-                    <option value="">-- Select Category --</option>
-                    <option value="tools">Construction Tools</option>
-                    <option value="general">General Equipment</option>
-                    <option value="heavy">Heavy Equipment / Machinery</option>
-                    <option value="materials">Construction Materials</option>
-                    <option value="consumables">Consumable Materials</option>
-                </select>
-            </div>
-            <br>
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
 
-            <div>
-                <label for="brand">Brand:</label><br>
-                <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
-            </div>
-            <br>
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <h1>Add New Item</h1>
+                <div class="user-info">
+                    <span class="user-name">👤 Loading...</span>
+                </div>
+            </header>
 
-            <div>
-                <label for="quantity">Quantity:</label><br>
-                <input type="number" id="quantity" name="quantity" min="0" required>
-            </div>
-            <br>
+            <!-- ADD ITEM FORM -->
+            <section class="content-card" style="margin-bottom: 20px;">
+                <h2 id="formTitle">Add New Item</h2>
+                <form>
+                    <div>
+                        <label for="itemName">Item Name:</label><br>
+                        <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
+                    </div>
+                    <br>
 
-            <div>
-                <label for="location">Location:</label><br>
-                <input type="text" id="location" name="location" placeholder="e.g. Warehouse A">
-            </div>
-            <br>
+                    <div>
+                        <label for="uniqueCode">Unique Code:</label><br>
+                        <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
+                    </div>
+                    <br>
 
-            <div>
-                <label for="condition">Condition:</label><br>
-                <select id="condition" name="condition" required>
-                    <option value="">-- Select Condition --</option>
-                    <option value="available">Available</option>
-                    <option value="in-use">In Use</option>
-                    <option value="low-stock">Low Stock</option>
-                    <option value="out-of-stock">Out of Stock</option>
-                    <option value="maintenance">For Maintenance</option>
-                </select>
-            </div>
-            <br>
+                    <div>
+                        <label for="category">Category:</label><br>
+                        <select id="category" name="category" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Construction Tools">Construction Tools</option>
+                            <option value="General Equipment">General Equipment</option>
+                            <option value="Heavy Equipment">Heavy Equipment / Machinery</option>
+                            <option value="Construction Materials">Construction Materials</option>
+                            <option value="Consumable Materials">Consumable Materials</option>
+                        </select>
+                    </div>
+                    <br>
 
-                        <button type="submit" id="submitBtn">Add Item</button>
-            <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
-        </form>
-    </section>
+                    <div>
+                        <label for="brand">Brand:</label><br>
+                        <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
+                    </div>
+                    <br>
 
-    <hr>
+                    <div>
+                        <label for="quantity">Quantity:</label><br>
+                        <input type="number" id="quantity" name="quantity" min="0" required>
+                    </div>
+                    <br>
 
-    <!-- ITEM LIST -->
-    <section>
-        <h2>Item List</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Unique Code</th>
-                    <th>Item Name</th>
-                    <th>Category</th>
-                    <th>Quantity</th>
-                    <th>Condition</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>TOOL-0001</td>
-                    <td>Hammer</td>
-                    <td>Construction Tools</td>
-                    <td>10</td>
-                    <td>Available</td>
-                    <td>
-                        <button>Edit</button>
-                        <button>Delete</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>MAT-0001</td>
-                    <td>Cement</td>
-                    <td>Construction Materials</td>
-                    <td>50</td>
-                    <td>Available</td>
-                    <td>
-                        <button>Edit</button>
-                        <button>Delete</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>HEAVY-0001</td>
-                    <td>Excavator</td>
-                    <td>Heavy Equipment</td>
-                    <td>1</td>
-                    <td>In Use</td>
-                    <td>
-                        <button>Edit</button>
-                        <button>Delete</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
+                    <div>
+                        <label for="location">Location:</label><br>
+                        <input type="text" id="location" name="location" placeholder="e.g. Warehouse A">
+                    </div>
+                    <br>
 
-    <hr>
+                    <div>
+                        <label for="condition">Condition:</label><br>
+                        <select id="condition" name="condition" required>
+                            <option value="">-- Select Condition --</option>
+                            <option value="Available">Available</option>
+                            <option value="In Use">In Use</option>
+                            <option value="Low Stock">Low Stock</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                            <option value="For Maintenance">For Maintenance</option>
+                        </select>
+                    </div>
+                    <br>
 
-    <!-- FOOTER -->
-    <footer>
-        <p>&copy; 2026 Compact II Gencon Inc. All rights reserved.</p>
-    </footer>
+                    <button type="submit" id="submitBtn">Add Item</button>
+                    <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
+                </form>
+            </section>
 
-        <script src="script.js"></script>
+            <!-- ITEM LIST -->
+            <section class="content-card">
+                <h2>Item List</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Unique Code</th>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Quantity</th>
+                            <th>Condition</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dinamiko itong laman via script.js -->
+                    </tbody>
+                </table>
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- SCRIPTS: auth.js MUNA, tapos script.js -->
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
 </body>
 </html>

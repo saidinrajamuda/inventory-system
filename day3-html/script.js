@@ -1,9 +1,7 @@
-// ===== INVENTORY SYSTEM - DAY 10 =====
-// Frontend connecting to backend API
+// ===== INVENTORY SYSTEM - DAY 18 (with RBAC) =====
 
 const API_URL = "http://localhost:3000/api/items";
 
-// ===== EDIT MODE TRACKER =====
 let editingId = null;
 
 // ===== RENDER TABLE =====
@@ -32,19 +30,26 @@ function renderTable(items) {
             <td>${item.quantity}</td>
             <td>${item.condition}</td>
             <td>
-                <button onclick="editItem(${item.id})">Edit</button>
-                <button onclick="deleteItem(${item.id})">Delete</button>
+                <button onclick="editItem(${item.id})" data-role="admin">Edit</button>
+                <button onclick="deleteItem(${item.id})" data-role="admin">Delete</button>
                 <button onclick="showQRCode(${item.id})" style="background-color: #27ae60;">QR</button>
             </td>
         `;
         tbody.appendChild(row);
     });
+
+    // I-apply yung role-based UI pagkatapos i-render
+    if (typeof applyRoleBasedUI === "function") {
+        applyRoleBasedUI();
+    }
 }
 
 // ===== LOAD ITEMS FROM BACKEND =====
 async function loadItems() {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -68,7 +73,6 @@ async function addItem(event) {
     const location = document.getElementById("location").value.trim();
     const condition = document.getElementById("condition").value;
 
-    // Validation
     if (!name || !code || !category || isNaN(quantity) || !condition) {
         alert("⚠️ Please fill in all required fields!");
         return;
@@ -80,17 +84,15 @@ async function addItem(event) {
         let response;
 
         if (editingId !== null) {
-            // UPDATE
             response = await fetch(`${API_URL}/${editingId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders(),
                 body: JSON.stringify(itemData)
             });
         } else {
-            // CREATE
             response = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders(),
                 body: JSON.stringify(itemData)
             });
         }
@@ -113,7 +115,9 @@ async function addItem(event) {
 // ===== EDIT ITEM =====
 async function editItem(id) {
     try {
-        const response = await fetch(`${API_URL}/${id}`);
+        const response = await fetch(`${API_URL}/${id}`, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (!result.success) {
@@ -153,7 +157,8 @@ async function deleteItem(id) {
 
     try {
         const response = await fetch(`${API_URL}/${id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: authHeaders()
         });
         const result = await response.json();
 
@@ -189,7 +194,9 @@ function resetForm() {
 // ===== SHOW QR CODE =====
 async function showQRCode(id) {
     try {
-        const response = await fetch(`${API_URL}/${id}/qrcode`);
+        const response = await fetch(`${API_URL}/${id}/qrcode`, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (!result.success) {
@@ -199,7 +206,6 @@ async function showQRCode(id) {
 
         const { item, qrCode } = result.data;
 
-        // Gumawa ng modal
         const modal = document.createElement("div");
         modal.style.cssText = `
             position: fixed;
@@ -240,12 +246,10 @@ async function showQRCode(id) {
 
         document.body.appendChild(modal);
 
-        // Close button
         document.getElementById("closeQRBtn").addEventListener("click", () => {
             modal.remove();
         });
 
-        // Click sa labas para close
         modal.addEventListener("click", (e) => {
             if (e.target === modal) modal.remove();
         });
@@ -257,6 +261,11 @@ async function showQRCode(id) {
 
 // ===== SETUP =====
 document.addEventListener("DOMContentLoaded", () => {
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
+        return;
+    }
+
     const form = document.querySelector("form");
     if (form) {
         form.addEventListener("submit", addItem);

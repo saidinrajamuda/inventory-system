@@ -1,4 +1,4 @@
-// ===== REPORTS - DAY 16 =====
+// ===== REPORTS - DAY 18 (with RBAC) =====
 
 const API_VERIFICATIONS = "http://localhost:3000/api/verifications";
 
@@ -10,7 +10,9 @@ async function loadVerifications() {
     const tbody = document.getElementById("reportsTableBody");
 
     try {
-        const response = await fetch(API_VERIFICATIONS);
+        const response = await fetch(API_VERIFICATIONS, {
+            headers: authHeaders()
+        });
         const result = await response.json();
 
         if (!result.success) {
@@ -88,7 +90,6 @@ function updateSummary() {
     document.getElementById("reportSummary").textContent = 
         `Showing ${total} record(s) — ${matched} Matched, ${discrepancies} Discrepancy`;
 
-    // I-save para sa export
     window.currentReportData = filteredVerifications;
 }
 
@@ -99,10 +100,8 @@ function applyFilters() {
     const dateTo = document.getElementById("filterDateTo").value;
 
     filteredVerifications = allVerifications.filter(v => {
-        // Status filter
         if (statusFilter !== "All" && v.status !== statusFilter) return false;
 
-        // Date filter
         const vDate = new Date(v.created_at);
         if (dateFrom) {
             const from = new Date(dateFrom);
@@ -142,10 +141,8 @@ function exportToCSV() {
         return;
     }
 
-    // Header row
     const headers = ["Date", "Item Code", "Item Name", "Expected Qty", "Actual Qty", "Status", "Remarks", "Verified By"];
 
-    // Data rows
     const rows = data.map(v => [
         new Date(v.created_at).toLocaleString(),
         v.code,
@@ -157,12 +154,10 @@ function exportToCSV() {
         v.verified_by
     ]);
 
-    // Combine headers at rows
     const csvContent = [headers, ...rows]
         .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
         .join("\n");
 
-    // Gumawa ng Blob at i-download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -179,8 +174,97 @@ function exportToCSV() {
     console.log(`✅ Exported ${data.length} records to CSV`);
 }
 
+// ===== CUSTOM PRINT REPORT =====
+function printReport() {
+    const data = window.currentReportData || [];
+    if (data.length === 0) {
+        alert("⚠️ No data to print.");
+        return;
+    }
+
+    const total = data.length;
+    const matched = data.filter(v => v.status === "Matched").length;
+    const discrepancies = data.filter(v => v.status === "Discrepancy").length;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Inventory Verification Report</title>
+            <style>
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
+                h1 { color: #1e3a5f; font-size: 24px; margin-bottom: 5px; }
+                .header { margin-bottom: 30px; border-bottom: 2px solid #1e3a5f; padding-bottom: 20px; }
+                .meta { font-size: 14px; color: #666; margin: 5px 0; }
+                .summary { display: flex; gap: 30px; margin: 20px 0; font-size: 16px; font-weight: 600; }
+                .summary span { color: #1e3a5f; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background-color: #1e3a5f; color: white; padding: 10px; text-align: left; font-size: 13px; }
+                td { padding: 10px; border-bottom: 1px solid #ddd; font-size: 13px; }
+                .status-matched { color: #2e7d32; font-weight: 600; }
+                .status-discrepancy { color: #c62828; font-weight: 600; }
+                .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📦 Inventory Verification Report</h1>
+                <div class="meta">Company: Compact II Gencon Inc.</div>
+                <div class="meta">Generated: ${new Date().toLocaleString()}</div>
+                <div class="meta">Total Records: ${total}</div>
+                <div class="summary">
+                    <span>Matched: ${matched}</span>
+                    <span>Discrepancies: ${discrepancies}</span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Code</th>
+                        <th>Item Name</th>
+                        <th>Expected</th>
+                        <th>Actual</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(v => `
+                        <tr>
+                            <td>${new Date(v.created_at).toLocaleDateString()}</td>
+                            <td>${v.code}</td>
+                            <td>${v.name}</td>
+                            <td>${v.expected_qty}</td>
+                            <td>${v.actual_qty}</td>
+                            <td class="${v.status === "Matched" ? "status-matched" : "status-discrepancy"}">${v.status === "Matched" ? "✅ Matched" : "⚠️ Discrepancy"}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+
+            <div class="footer">
+                © 2026 Compact II Gencon Inc. — Inventory Management System
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+}
+
 // ===== INITIALIZE =====
 document.addEventListener("DOMContentLoaded", () => {
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
+        return;
+    }
+
     loadVerifications();
     console.log("✅ Reports page loaded!");
 });

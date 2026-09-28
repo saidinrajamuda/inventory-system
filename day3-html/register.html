@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Inventory System</title>
+    <title>Register - Inventory System</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .auth-container {
@@ -21,7 +21,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
 
         .auth-logo {
@@ -52,7 +52,8 @@
             font-size: 14px;
         }
 
-        .auth-form-group input {
+        .auth-form-group input,
+        .auth-form-group select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
@@ -61,7 +62,8 @@
             font-family: inherit;
         }
 
-        .auth-form-group input:focus {
+        .auth-form-group input:focus,
+        .auth-form-group select:focus {
             outline: none;
             border-color: #1e3a5f;
             box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.15);
@@ -95,6 +97,17 @@
             text-align: center;
         }
 
+        .auth-success {
+            display: none;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            text-align: center;
+        }
+
         .auth-link {
             text-align: center;
             margin-top: 20px;
@@ -119,35 +132,56 @@
         <div class="auth-card">
 
             <div class="auth-logo">
-                <h1>📦 Inventory System</h1>
+                <h1>📦 Create Account</h1>
                 <p>Compact II Gencon Inc.</p>
             </div>
 
             <div id="errorMsg" class="auth-error"></div>
+            <div id="successMsg" class="auth-success"></div>
 
-            <form id="loginForm">
+            <form id="registerForm">
+                <div class="auth-form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="e.g. Juan Dela Cruz" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="e.g. juan@compact2.com" required>
+                </div>
+
                 <div class="auth-form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required>
                 </div>
 
                 <div class="auth-form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <input type="password" id="password" name="password" placeholder="At least 6 characters" minlength="6" required>
                 </div>
 
-                <button type="submit" class="auth-btn">🔐 Sign In</button>
+                <div class="auth-form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="">-- Select Role --</option>
+                        <option value="Admin">Admin / Inventory Manager</option>
+                        <option value="Personnel">Inventory Personnel (Warehouse)</option>
+                        <option value="Management">Management</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="auth-btn">✨ Create Account</button>
             </form>
 
             <div class="auth-link">
-                Don't have an account? <a href="register.html">Register here</a>
+                Already have an account? <a href="login.html">Sign in here</a>
             </div>
 
         </div>
     </div>
 
     <script src="auth.js"></script>
-    <script src="login.js"></script>
+    <script src="register.js"></script>
 
 </body>
 </html>

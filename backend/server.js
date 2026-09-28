@@ -8,13 +8,103 @@ const { promisePool, testConnection } = require("./db");
 const app = express();
 const PORT = 3000;
 
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = "compact2-inventory-secret-key-2026";  // Change this in production!
 
 app.use(cors());
 app.use(express.json());
+
+// ===== AUTH MIDDLEWARE =====
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: "⚠️ No token provided. Please login."
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({
+                success: false,
+                message: "❌ Invalid or expired token."
+            });
+        }
+        req.user = user;
+        next();
+    });
+}
+
+// ===== ROLE MIDDLEWARE =====
+function authorizeRoles(...allowedRoles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "⚠️ Not authenticated."
+            });
+        }
+
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: `❌ Access denied. Required role: ${allowedRoles.join(" or ")}`
+            });
+        }
+
+        next();
+    };
+}
+
+// ===== AUTH MIDDLEWARE =====
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: "⚠️ No token provided. Please login."
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({
+                success: false,
+                message: "❌ Invalid or expired token."
+            });
+        }
+        req.user = user;
+        next();
+    });
+}
+
+// ===== ROLE MIDDLEWARE =====
+function authorizeRoles(...allowedRoles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "⚠️ Not authenticated."
+            });
+        }
+
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: `❌ Access denied. Required role: ${allowedRoles.join(" or ")}`
+            });
+        }
+
+        next();
+    };
+}
 
 // ===== ROOT =====
 app.get("/", (req, res) => {
@@ -25,7 +115,7 @@ app.get("/", (req, res) => {
 });
 
 // ===== GET ALL ITEMS =====
-app.get("/api/items", async (req, res) => {
+app.get("/api/items", authenticateToken, async (req, res) => {
     try {
         const [rows] = await promisePool.query(
             "SELECT id, code, name, category, quantity, location, condition_status AS `condition` FROM items ORDER BY id ASC"
@@ -42,7 +132,7 @@ app.get("/api/items", async (req, res) => {
 });
 
 // ===== GET SINGLE ITEM =====
-app.get("/api/items/:id", async (req, res) => {
+app.get("/api/items/:id", authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const [rows] = await promisePool.query(
@@ -63,7 +153,7 @@ app.get("/api/items/:id", async (req, res) => {
 });
 
 // ===== CREATE (POST) =====
-app.post("/api/items", async (req, res) => {
+app.post("/api/items", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const { code, name, category, quantity, location, condition } = req.body;
 
@@ -108,7 +198,7 @@ app.post("/api/items", async (req, res) => {
 });
 
 // ===== UPDATE (PUT) =====
-app.put("/api/items/:id", async (req, res) => {
+app.put("/api/items/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { code, name, category, quantity, location, condition } = req.body;
@@ -166,7 +256,7 @@ app.put("/api/items/:id", async (req, res) => {
 });
 
 // ===== DELETE =====
-app.delete("/api/items/:id", async (req, res) => {
+app.delete("/api/items/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
 
@@ -252,7 +342,7 @@ app.get("/api/items/:id/qrcode", async (req, res) => {
 // ===== VERIFICATIONS =====
 
 // CREATE verification record
-app.post("/api/verifications", async (req, res) => {
+app.post("/api/verifications", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
     try {
         const { item_id, expected_qty, actual_qty, remarks, verified_by } = req.body;
 
@@ -295,7 +385,7 @@ app.post("/api/verifications", async (req, res) => {
 });
 
 // GET all verifications
-app.get("/api/verifications", async (req, res) => {
+app.get("/api/verifications", authenticateToken, async (req, res) => {
     try {
         const [rows] = await promisePool.query(
             `SELECT v.*, i.code, i.name 
