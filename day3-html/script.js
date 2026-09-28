@@ -1,6 +1,6 @@
 // ===== INVENTORY SYSTEM - DAY 18 (with RBAC) =====
 
-const API_URL = "http://localhost:3000/api/items";
+const API_URL = `${window.API_BASE_URL}/api/items`;
 
 let editingId = null;
 

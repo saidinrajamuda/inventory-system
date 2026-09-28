@@ -1,6 +1,6 @@
 // ===== REPORTS - DAY 18 (with RBAC) =====
 
-const API_VERIFICATIONS = "http://localhost:3000/api/verifications";
+const API_VERIFICATIONS = `${window.API_BASE_URL}/api/verifications`;
 
 let allVerifications = [];
 let filteredVerifications = [];

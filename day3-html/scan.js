@@ -1,6 +1,6 @@
 // ===== SCAN QR CODE - DAY 13 =====
 
-const API_URL = "http://localhost:3000/api/items";
+const API_URL = `${window.API_BASE_URL}/api/items`;
 let html5QrCode = null;
 let isScanning = false;
 let currentItem = null;

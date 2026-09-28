@@ -1,6 +1,6 @@
 // ===== SHARED AUTHENTICATION LOGIC =====
 
-const API_AUTH = "http://localhost:3000/api/auth";
+const API_AUTH = `${window.API_BASE_URL}/api/auth`;
 
 // ===== GET CURRENT USER =====
 function getCurrentUser() {

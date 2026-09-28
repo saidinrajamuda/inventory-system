@@ -1,19 +1,27 @@
 // ===== INVENTORY BACKEND - DAY 11 (with MySQL) =====
 
+require("dotenv").config();
+
 const express = require("express");
 const QRCode = require("qrcode");
 const cors = require("cors");
 const { promisePool, testConnection } = require("./db");
 
 const app = express();
-const PORT = 3000;
-
+const PORT = process.env.PORT || 3000;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = "compact2-inventory-secret-key-2026";  // Change this in production!
+const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_change_me";
 
-app.use(cors());
+// ===== CORS CONFIG =====
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN 
+        ? [process.env.CORS_ORIGIN, "http://localhost:5500", "http://127.0.0.1:5500"]
+        : "*",
+    credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // ===== AUTH MIDDLEWARE =====

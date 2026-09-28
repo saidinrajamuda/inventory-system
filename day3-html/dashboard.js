@@ -1,7 +1,7 @@
 // ===== DASHBOARD - DAY 18 (with RBAC) =====
 
-const API_ITEMS = "http://localhost:3000/api/items";
-const API_VERIFICATIONS = "http://localhost:3000/api/verifications";
+const API_ITEMS = `${window.API_BASE_URL}/api/items`;
+const API_VERIFICATIONS = `${window.API_BASE_URL}/api/verifications`;
 
 // ===== LOAD STATS =====
 async function loadStats() {

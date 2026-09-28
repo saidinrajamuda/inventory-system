@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management - Inventory System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📦 Inventory</h2>
+                <p>Compact II Gencon Inc.</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">📊 Dashboard</a>
+                <a href="index.html">📝 Add Item</a>
+                <a href="#">📋 Item List</a>
+                <a href="#">📤 Issue/Release</a>
+                <a href="scan.html" data-role="not-management">📱 Scan QR</a>
+                <a href="#">⚠️ Discrepancies</a>
+                <a href="reports.html">📈 Reports</a>
+                <a href="users.html" class="active" data-role="admin">👥 Users</a>
+                <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <h1>User Management</h1>
+                <div class="user-info">
+                    <span class="user-name">👤 Loading...</span>
+                </div>
+            </header>
+
+            <section class="content-card">
+                <h2>👥 All Users</h2>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Only Admins can view this page.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="users.js"></script>
+</body>
+</html>
