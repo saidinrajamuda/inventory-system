@@ -22,7 +22,6 @@
                 <a href="index.html">📝 Add Item</a>
                 <a href="#">📋 Item List</a>
                 <a href="#">📤 Issue/Release</a>
-                <a href="#">✅ Verification</a>
                 <a href="scan.html">📱 Scan QR</a>
                 <a href="#">⚠️ Discrepancies</a>
                 <a href="#">📈 Reports</a>
@@ -33,10 +32,12 @@
         <!-- MAIN CONTENT -->
         <main class="main-content">
 
+            <!-- TOP BAR -->
             <header class="topbar">
                 <h1>Dashboard</h1>
                 <div class="user-info">
                     <span>👤 Admin</span>
+                    <span id="lastUpdated" style="font-size: 12px; color: #999; margin-left: 15px;"></span>
                 </div>
             </header>
 
@@ -45,7 +46,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">📦</div>
                     <div class="stat-info">
-                        <h3>150</h3>
+                        <h3 id="totalItems">—</h3>
                         <p>Total Items</p>
                     </div>
                 </div>
@@ -53,7 +54,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">✅</div>
                     <div class="stat-info">
-                        <h3>120</h3>
+                        <h3 id="availableItems">—</h3>
                         <p>Available</p>
                     </div>
                 </div>
@@ -61,7 +62,7 @@
                 <div class="stat-card warning">
                     <div class="stat-icon">⚠️</div>
                     <div class="stat-info">
-                        <h3>18</h3>
+                        <h3 id="lowStock">—</h3>
                         <p>Low Stock</p>
                     </div>
                 </div>
@@ -69,42 +70,31 @@
                 <div class="stat-card danger">
                     <div class="stat-icon">❌</div>
                     <div class="stat-info">
-                        <h3>12</h3>
-                        <p>Out of Stock</p>
+                        <h3 id="discrepancies">—</h3>
+                        <p>Discrepancies</p>
                     </div>
                 </div>
             </section>
 
-            <!-- RECENT ACTIVITY -->
+            <!-- RECENT VERIFICATIONS -->
             <section class="content-card">
-                <h2>Recent Activity</h2>
+                <h2>🔍 Recent Verifications</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Item</th>
-                            <th>Action</th>
-                            <th>User</th>
+                            <th>Item Code</th>
+                            <th>Item Name</th>
+                            <th>Expected</th>
+                            <th>Actual</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="verificationsTable">
                         <tr>
-                            <td>2026-09-25</td>
-                            <td>Hammer</td>
-                            <td>Issued</td>
-                            <td>Juan</td>
-                        </tr>
-                        <tr>
-                            <td>2026-09-25</td>
-                            <td>Cement</td>
-                            <td>Added</td>
-                            <td>Maria</td>
-                        </tr>
-                        <tr>
-                            <td>2026-09-24</td>
-                            <td>Excavator</td>
-                            <td>Returned</td>
-                            <td>Pedro</td>
+                            <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+                                Loading...
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -113,6 +103,9 @@
         </main>
 
     </div>
+
+    <!-- DASHBOARD JAVASCRIPT -->
+    <script src="dashboard.js"></script>
 
 </body>
 </html>
