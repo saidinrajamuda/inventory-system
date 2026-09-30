@@ -81,6 +81,32 @@
                         <input type="number" id="quantity" name="quantity" min="0" required>
                     </div>
                     <br>
+                    <div>
+                        <label for="unit">Unit:</label><br>
+                        <select id="unit" name="unit">
+                            <option value="pcs">pcs (pieces)</option>
+                            <option value="box">box</option>
+                            <option value="kg">kg (kilograms)</option>
+                            <option value="m">m (meters)</option>
+                            <option value="L">L (liters)</option>
+                            <option value="set">set</option>
+                        </select>
+                    </div>
+                    <br>
+
+                    <div>
+                        <label for="reorderLevel">Reorder Level:</label><br>
+                        <input type="number" id="reorderLevel" name="reorderLevel" min="0" value="5" placeholder="e.g. 5">
+                    </div>
+                    <br>
+
+                    <div>
+                        <label for="warehouse">Warehouse:</label><br>
+                        <select id="warehouse" name="warehouse">
+                            <option value="">-- Select Warehouse --</option>
+                        </select>
+                    </div>
+                    <br>
 
                     <div>
                         <label for="location">Location:</label><br>

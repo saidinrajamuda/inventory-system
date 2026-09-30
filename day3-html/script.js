@@ -71,6 +71,9 @@ async function addItem(event) {
     const category = document.getElementById("category").value;
     const quantity = parseInt(document.getElementById("quantity").value);
     const location = document.getElementById("location").value.trim();
+    const unit = document.getElementById("unit").value;
+    const reorderLevel = parseInt(document.getElementById("reorderLevel").value) || 5;
+    const warehouseId = document.getElementById("warehouse").value || null;
     const condition = document.getElementById("condition").value;
 
     if (!name || !code || !category || isNaN(quantity) || !condition) {
@@ -78,7 +81,12 @@ async function addItem(event) {
         return;
     }
 
-    const itemData = { code, name, category, quantity, location, condition };
+        const itemData = { 
+        code, name, category, quantity, location, condition,
+        unit, 
+        reorder_level: reorderLevel,
+        warehouse_id: warehouseId
+    };
 
     try {
         let response;
@@ -133,6 +141,9 @@ async function editItem(id) {
         document.getElementById("quantity").value = item.quantity;
         document.getElementById("location").value = item.location || "";
         document.getElementById("condition").value = item.condition;
+        document.getElementById("unit").value = item.unit || "pcs";
+        document.getElementById("reorderLevel").value = item.reorder_level || 5;
+        document.getElementById("warehouse").value = item.warehouse_id || "";
 
         editingId = id;
 
@@ -264,6 +275,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isLoggedIn()) {
         window.location.href = "login.html";
         return;
+    }document.addEventListener("DOMContentLoaded", () => {
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
+        return;
     }
 
     const form = document.querySelector("form");
@@ -272,5 +287,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     loadItems();
+    loadWarehouses();
     console.log("✅ Frontend connected to backend API!");
+});
+
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", addItem);
+    }
+
+    loadItems();
+    console.log("✅ Frontend connected to backend API!");
+
+    // ===== LOAD WAREHOUSES =====
+async function loadWarehouses() {
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/api/warehouses`, {
+            headers: authHeaders()
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            const select = document.getElementById("warehouse");
+            if (!select) return;
+
+            select.innerHTML = '<option value="">-- Select Warehouse --</option>';
+            result.data.forEach(w => {
+                const opt = document.createElement("option");
+                opt.value = w.id;
+                opt.textContent = `${w.name} — ${w.location}`;
+                select.appendChild(opt);
+            });
+        }
+    } catch (error) {
+        console.error("Error loading warehouses:", error);
+    }
+}
 });
