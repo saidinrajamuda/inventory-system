@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Issue / Release - Inventory System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📦 Inventory</h2>
+                <p>Compact II Gencon Inc.</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">📊 Dashboard</a>
+                <a href="index.html">📝 Add Item</a>
+                <a href="#">📋 Item List</a>
+                <a href="issue.html" class="active">📤 Issue/Release</a>
+                <a href="scan.html" data-role="not-management">📱 Scan QR</a>
+                <a href="#">⚠️ Discrepancies</a>
+                <a href="reports.html">📈 Reports</a>
+                <a href="users.html" data-role="admin">👥 Users</a>
+                <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <h1>Issue / Release Items</h1>
+                <div class="user-info">
+                    <span class="user-name">👤 Loading...</span>
+                </div>
+            </header>
+
+            <section class="content-card" data-role="admin-personnel" style="margin-bottom: 20px;">
+                <h2>📝 New Request</h2>
+                <form id="requestForm">
+                    <div>
+                        <label for="reqItem">Select Item:</label><br>
+                        <select id="reqItem" required>
+                            <option value="">-- Select Item --</option>
+                        </select>
+                    </div>
+                    <br>
+                    <div>
+                        <label for="reqQty">Quantity:</label><br>
+                        <input type="number" id="reqQty" min="1" required>
+                    </div>
+                    <br>
+                    <div>
+                        <label for="reqPurpose">Purpose:</label><br>
+                        <input type="text" id="reqPurpose" placeholder="e.g. Site construction">
+                    </div>
+                    <br>
+                    <div>
+                        <label for="reqSite">Project / Site:</label><br>
+                        <input type="text" id="reqSite" placeholder="e.g. Project Alpha">
+                    </div>
+                    <br>
+                    <div>
+                        <label for="reqBy">Requested By:</label><br>
+                        <input type="text" id="reqBy" required>
+                    </div>
+                    <br>
+                    <div>
+                        <label for="reqNotes">Notes:</label><br>
+                        <textarea id="reqNotes" rows="2"></textarea>
+                    </div>
+                    <br>
+                    <button type="submit">Submit Request</button>
+                </form>
+            </section>
+
+            <section class="content-card">
+                <h2>📋 Request History</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Requested By</th>
+                            <th>Purpose / Site</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTableBody">
+                        <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="issue.js"></script>
+</body>
+</html>

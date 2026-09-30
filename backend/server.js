@@ -434,6 +434,135 @@ app.delete("/api/users/:id", authenticateToken, authorizeRoles("Admin"), async (
     }
 });
 
+// ===== REQUESTS (Issue/Release) =====
+
+// GET all requests
+app.get("/api/requests", authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await promisePool.query(
+            `SELECT r.*, i.code, i.name AS item_name, i.quantity AS current_stock, i.unit
+             FROM requests r
+             JOIN items i ON r.item_id = i.id
+             ORDER BY r.created_at DESC`
+        );
+        res.json({ success: true, count: rows.length, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// CREATE request
+app.post("/api/requests", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
+    try {
+        const { item_id, quantity, purpose, project_site, requested_by, notes } = req.body;
+
+        if (!item_id || !quantity || !requested_by) {
+            return res.status(400).json({ success: false, message: "⚠️ Missing required fields" });
+        }
+
+        const [items] = await promisePool.query("SELECT quantity, name FROM items WHERE id = ?", [item_id]);
+        if (items.length === 0) {
+            return res.status(404).json({ success: false, message: "Item not found" });
+        }
+
+        if (parseInt(quantity) > items[0].quantity) {
+            return res.status(400).json({
+                success: false,
+                message: `⚠️ Not enough stock! Only ${items[0].quantity} available.`
+            });
+        }
+
+        const [result] = await promisePool.query(
+            `INSERT INTO requests (item_id, quantity, purpose, project_site, requested_by, notes)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [item_id, parseInt(quantity), purpose || "", project_site || "", requested_by, notes || ""]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: `✅ Request for "${items[0].name}" submitted!`,
+            data: { id: result.insertId, item_id, quantity, status: "Pending" }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// APPROVE request
+app.put("/api/requests/:id/approve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const [rows] = await promisePool.query("SELECT * FROM requests WHERE id = ?", [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Request not found" });
+        }
+        if (rows[0].status !== "Pending") {
+            return res.status(400).json({ success: false, message: "Request already processed" });
+        }
+
+        await promisePool.query(
+            "UPDATE requests SET status = 'Approved', approved_by = ? WHERE id = ?",
+            [req.user.username, id]
+        );
+        res.json({ success: true, message: "✅ Request approved!" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// RELEASE request — deducts stock
+app.put("/api/requests/:id/release", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { released_to } = req.body;
+
+        const [rows] = await promisePool.query("SELECT * FROM requests WHERE id = ?", [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Request not found" });
+        }
+        const request = rows[0];
+        if (request.status !== "Approved") {
+            return res.status(400).json({ success: false, message: "Request must be approved first" });
+        }
+
+        const [items] = await promisePool.query("SELECT quantity FROM items WHERE id = ?", [request.item_id]);
+        const newQty = items[0].quantity - request.quantity;
+        if (newQty < 0) {
+            return res.status(400).json({ success: false, message: "Not enough stock" });
+        }
+
+        const newCondition = newQty === 0 ? "Out of Stock" : (newQty < 10 ? "Low Stock" : "Available");
+
+        await promisePool.query(
+            "UPDATE items SET quantity = ?, condition_status = ? WHERE id = ?",
+            [newQty, newCondition, request.item_id]
+        );
+        await promisePool.query(
+            "UPDATE requests SET status = 'Released', released_by = ?, released_to = ? WHERE id = ?",
+            [req.user.username, released_to || "N/A", id]
+        );
+
+        res.json({ success: true, message: `✅ Released! New stock: ${newQty}` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// REJECT request
+app.put("/api/requests/:id/reject", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        await promisePool.query(
+            "UPDATE requests SET status = 'Rejected', approved_by = ? WHERE id = ?",
+            [req.user.username, id]
+        );
+        res.json({ success: true, message: "Request rejected." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ===== START SERVER =====
 async function startServer() {
     const connected = await testConnection();
