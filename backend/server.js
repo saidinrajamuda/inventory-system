@@ -563,6 +563,100 @@ app.put("/api/requests/:id/reject", authenticateToken, authorizeRoles("Admin"), 
     }
 });
 
+// ===== DISCREPANCIES =====
+
+// GET all discrepancies
+app.get("/api/discrepancies", authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await promisePool.query(
+            `SELECT d.*, i.code, i.name AS item_name, i.unit,
+                    v.verified_by, v.created_at AS verified_at
+             FROM discrepancies d
+             JOIN items i ON d.item_id = i.id
+             JOIN verifications v ON d.verification_id = v.id
+             ORDER BY d.created_at DESC`
+        );
+        res.json({ success: true, count: rows.length, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// REVIEW discrepancy (Admin)
+app.put("/api/discrepancies/:id/review", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { action, remarks } = req.body;
+
+        if (!action) {
+            return res.status(400).json({ success: false, message: "⚠️ Action is required" });
+        }
+
+        await promisePool.query(
+            `UPDATE discrepancies 
+             SET action = ?, remarks = ?, status = 'Reviewed', reviewed_by = ?
+             WHERE id = ?`,
+            [action, remarks || "", req.user.username, id]
+        );
+
+        res.json({ success: true, message: `✅ Discrepancy marked as "${action}"` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// RESOLVE discrepancy — adjust item stock (Admin)
+app.put("/api/discrepancies/:id/resolve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const [rows] = await promisePool.query(
+            "SELECT * FROM discrepancies WHERE id = ?", [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Discrepancy not found" });
+        }
+
+        const disc = rows[0];
+
+        // I-update yung actual quantity ng item
+        const newCondition = disc.actual_qty === 0 ? "Out of Stock" : 
+                           (disc.actual_qty < 10 ? "Low Stock" : "Available");
+
+        await promisePool.query(
+            "UPDATE items SET quantity = ?, condition_status = ? WHERE id = ?",
+            [disc.actual_qty, newCondition, disc.item_id]
+        );
+
+        // I-update yung discrepancy status
+        await promisePool.query(
+            "UPDATE discrepancies SET status = 'Resolved', resolved_by = ? WHERE id = ?",
+            [req.user.username, id]
+        );
+
+        res.json({
+            success: true,
+            message: `✅ Resolved! Item stock adjusted to ${disc.actual_qty}.`
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// REJECT discrepancy
+app.put("/api/discrepancies/:id/reject", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        await promisePool.query(
+            "UPDATE discrepancies SET status = 'Rejected', resolved_by = ? WHERE id = ?",
+            [req.user.username, id]
+        );
+        res.json({ success: true, message: "Discrepancy rejected." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ===== START SERVER =====
 async function startServer() {
     const connected = await testConnection();
