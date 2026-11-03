@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Inventory System</title>
+    
+    <!-- PWA LINKS -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#1e3a5f">
+
     <link rel="stylesheet" href="style.css">
     <style>
         .auth-container {
@@ -14,7 +20,6 @@
             background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
             padding: 20px;
         }
-
         .auth-card {
             background: white;
             padding: 40px;
@@ -23,27 +28,22 @@
             width: 100%;
             max-width: 450px;
         }
-
         .auth-logo {
             text-align: center;
             margin-bottom: 30px;
         }
-
         .auth-logo h1 {
             color: #1e3a5f;
             font-size: 26px;
             margin-bottom: 5px;
         }
-
         .auth-logo p {
             color: #666;
             font-size: 13px;
         }
-
         .auth-form-group {
             margin-bottom: 18px;
         }
-
         .auth-form-group label {
             display: block;
             font-weight: 600;
@@ -51,7 +51,6 @@
             margin-bottom: 6px;
             font-size: 14px;
         }
-
         .auth-form-group input,
         .auth-form-group select {
             width: 100%;
@@ -61,14 +60,12 @@
             font-size: 14px;
             font-family: inherit;
         }
-
         .auth-form-group input:focus,
         .auth-form-group select:focus {
             outline: none;
             border-color: #1e3a5f;
             box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.15);
         }
-
         .auth-btn {
             width: 100%;
             padding: 12px;
@@ -81,11 +78,9 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-
         .auth-btn:hover {
             background: #2c5282;
         }
-
         .auth-error {
             display: none;
             background: #ffebee;
@@ -96,7 +91,6 @@
             font-size: 13px;
             text-align: center;
         }
-
         .auth-success {
             display: none;
             background: #e8f5e9;
@@ -107,20 +101,17 @@
             font-size: 13px;
             text-align: center;
         }
-
         .auth-link {
             text-align: center;
             margin-top: 20px;
             font-size: 13px;
             color: #666;
         }
-
         .auth-link a {
             color: #1e3a5f;
             font-weight: 600;
             text-decoration: none;
         }
-
         .auth-link a:hover {
             text-decoration: underline;
         }
@@ -130,7 +121,6 @@
 
     <div class="auth-container">
         <div class="auth-card">
-
             <div class="auth-logo">
                 <h1>📦 Create Account</h1>
                 <p>Compact II Gencon Inc.</p>
@@ -144,22 +134,18 @@
                     <label for="fullName">Full Name</label>
                     <input type="text" id="fullName" name="fullName" placeholder="e.g. Juan Dela Cruz" required>
                 </div>
-
                 <div class="auth-form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" placeholder="e.g. juan@compact2.com" required>
                 </div>
-
                 <div class="auth-form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" placeholder="Choose a username" required>
                 </div>
-
                 <div class="auth-form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="At least 6 characters" minlength="6" required>
                 </div>
-
                 <div class="auth-form-group">
                     <label for="role">Role</label>
                     <select id="role" name="role" required>
@@ -169,19 +155,28 @@
                         <option value="Management">Management</option>
                     </select>
                 </div>
-
                 <button type="submit" class="auth-btn">✨ Create Account</button>
             </form>
 
             <div class="auth-link">
                 Already have an account? <a href="login.html">Sign in here</a>
             </div>
-
         </div>
     </div>
+    
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="register.js"></script>
 
+    <!-- PWA SERVICE WORKER -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js")
+                .then(() => console.log("✅ SW registered"))
+                .catch((err) => console.warn("SW failed:", err));
+        });
+    }
+    </script>
 </body>
 </html>

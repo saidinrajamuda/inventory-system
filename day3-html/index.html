@@ -4,36 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Item - Inventory System</title>
+    
+    <!-- PWA LINKS -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#1e3a5f">
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="app-layout">
-
-        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>📦 Inventory</h2>
                 <p>Compact II Gencon Inc.</p>
             </div>
-
             <nav class="sidebar-nav">
                 <a href="dashboard.html">📊 Dashboard</a>
                 <a href="index.html" class="active">📝 Add Item</a>
                 <a href="#">📋 Item List</a>
-                <a href="#">📤 Issue/Release</a>
-                <a href="scan.html">📱 Scan QR</a>
+                <a href="issue.html">📤 Issue/Release</a>
+                <a href="scan.html" data-role="not-management">📱 Scan QR</a>
                 <a href="discrepancies.html">⚠️ Discrepancies</a>
                 <a href="reports.html">📈 Reports</a>
-                <a href="#">👥 Users</a>
+                <a href="users.html" data-role="admin">👥 Users</a>
                 <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content">
-
-            <!-- TOP BAR -->
             <header class="topbar">
                 <h1>Add New Item</h1>
                 <div class="user-info">
@@ -41,7 +41,6 @@
                 </div>
             </header>
 
-            <!-- ADD ITEM FORM -->
             <section class="content-card" style="margin-bottom: 20px;">
                 <h2 id="formTitle">Add New Item</h2>
                 <form>
@@ -50,13 +49,11 @@
                         <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
                     </div>
                     <br>
-
                     <div>
                         <label for="uniqueCode">Unique Code:</label><br>
                         <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
                     </div>
                     <br>
-
                     <div>
                         <label for="category">Category:</label><br>
                         <select id="category" name="category" required>
@@ -69,13 +66,11 @@
                         </select>
                     </div>
                     <br>
-
                     <div>
                         <label for="brand">Brand:</label><br>
                         <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
                     </div>
                     <br>
-
                     <div>
                         <label for="quantity">Quantity:</label><br>
                         <input type="number" id="quantity" name="quantity" min="0" required>
@@ -93,13 +88,11 @@
                         </select>
                     </div>
                     <br>
-
                     <div>
                         <label for="reorderLevel">Reorder Level:</label><br>
                         <input type="number" id="reorderLevel" name="reorderLevel" min="0" value="5" placeholder="e.g. 5">
                     </div>
                     <br>
-
                     <div>
                         <label for="warehouse">Warehouse:</label><br>
                         <select id="warehouse" name="warehouse">
@@ -107,13 +100,11 @@
                         </select>
                     </div>
                     <br>
-
                     <div>
                         <label for="location">Location:</label><br>
-                        <input type="text" id="location" name="location" placeholder="e.g. Warehouse A">
+                        <input type="text" id="location" name="location" placeholder="e.g. Shelf 1">
                     </div>
                     <br>
-
                     <div>
                         <label for="condition">Condition:</label><br>
                         <select id="condition" name="condition" required>
@@ -126,13 +117,11 @@
                         </select>
                     </div>
                     <br>
-
                     <button type="submit" id="submitBtn">Add Item</button>
                     <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
                 </form>
             </section>
 
-            <!-- ITEM LIST -->
             <section class="content-card">
                 <h2>Item List</h2>
                 <table>
@@ -152,15 +141,22 @@
                     </tbody>
                 </table>
             </section>
-
         </main>
-
     </div>
 
-    <!-- SCRIPTS: auth.js MUNA, tapos script.js -->
-     <script src="config.js"></script>
+    <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="script.js"></script>
 
+    <!-- PWA SERVICE WORKER -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js")
+                .then(() => console.log("✅ SW registered"))
+                .catch((err) => console.warn("SW failed:", err));
+        });
+    }
+    </script>
 </body>
 </html>

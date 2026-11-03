@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Inventory System</title>
+    
+    <!-- PWA LINKS -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#1e3a5f">
+
     <link rel="stylesheet" href="style.css">
     <style>
         .auth-container {
@@ -14,7 +20,6 @@
             background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
             padding: 20px;
         }
-
         .auth-card {
             background: white;
             padding: 40px;
@@ -23,27 +28,22 @@
             width: 100%;
             max-width: 400px;
         }
-
         .auth-logo {
             text-align: center;
             margin-bottom: 30px;
         }
-
         .auth-logo h1 {
             color: #1e3a5f;
             font-size: 26px;
             margin-bottom: 5px;
         }
-
         .auth-logo p {
             color: #666;
             font-size: 13px;
         }
-
         .auth-form-group {
             margin-bottom: 18px;
         }
-
         .auth-form-group label {
             display: block;
             font-weight: 600;
@@ -51,7 +51,6 @@
             margin-bottom: 6px;
             font-size: 14px;
         }
-
         .auth-form-group input {
             width: 100%;
             padding: 12px;
@@ -60,13 +59,11 @@
             font-size: 14px;
             font-family: inherit;
         }
-
         .auth-form-group input:focus {
             outline: none;
             border-color: #1e3a5f;
             box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.15);
         }
-
         .auth-btn {
             width: 100%;
             padding: 12px;
@@ -79,11 +76,9 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-
         .auth-btn:hover {
             background: #2c5282;
         }
-
         .auth-error {
             display: none;
             background: #ffebee;
@@ -94,20 +89,17 @@
             font-size: 13px;
             text-align: center;
         }
-
         .auth-link {
             text-align: center;
             margin-top: 20px;
             font-size: 13px;
             color: #666;
         }
-
         .auth-link a {
             color: #1e3a5f;
             font-weight: 600;
             text-decoration: none;
         }
-
         .auth-link a:hover {
             text-decoration: underline;
         }
@@ -117,7 +109,6 @@
 
     <div class="auth-container">
         <div class="auth-card">
-
             <div class="auth-logo">
                 <h1>📦 Inventory System</h1>
                 <p>Compact II Gencon Inc.</p>
@@ -130,24 +121,32 @@
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
                 </div>
-
                 <div class="auth-form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
-
                 <button type="submit" class="auth-btn">🔐 Sign In</button>
             </form>
 
             <div class="auth-link">
                 Don't have an account? <a href="register.html">Register here</a>
             </div>
-
         </div>
     </div>
+    
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="login.js"></script>
 
+    <!-- PWA SERVICE WORKER -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js")
+                .then(() => console.log("✅ SW registered"))
+                .catch((err) => console.warn("SW failed:", err));
+        });
+    }
+    </script>
 </body>
 </html>

@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issue / Release - Inventory System</title>
+    
+    <!-- PWA LINKS -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#1e3a5f">
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-layout">
-
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>📦 Inventory</h2>
@@ -98,5 +104,16 @@
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="issue.js"></script>
+
+    <!-- PWA SERVICE WORKER -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js")
+                .then(() => console.log("✅ SW registered"))
+                .catch((err) => console.warn("SW failed:", err));
+        });
+    }
+    </script>
 </body>
 </html>
