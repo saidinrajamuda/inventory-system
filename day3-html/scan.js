@@ -182,25 +182,13 @@ async function submitVerification() {
     if (!currentItem) {
         alert("⚠️ No item selected. Please scan a QR code first.");
         return;
-
-            // Kunin ang photo at i-convert sa base64
-        const photoInput = document.getElementById("photoInput");
-        let photoData = null;
-        
-        if (photoInput && photoInput.files.length > 0) {
-            const file = photoInput.files[0];
-            photoData = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(file);
-            });
-        }    
     }
 
     const actualQtyInput = document.getElementById("actualQty");
     const actualQty = actualQtyInput.value.trim();
     const remarks = document.getElementById("remarks").value.trim();
 
+    // Validation
     if (actualQty === "" || isNaN(parseInt(actualQty))) {
         alert("⚠️ Please enter the actual physical count.");
         actualQtyInput.focus();
@@ -217,7 +205,45 @@ async function submitVerification() {
     const isMatched = parseInt(actualQty) === parseInt(expectedQty);
 
     try {
-        const response = await fetch("http://localhost:3000/api/verifications", {
+        const photoInput = document.getElementById("photoInput");
+        let photoData = null;
+        
+        if (photoInput && photoInput.files.length > 0) {
+            statusEl.style.display = "block";
+            statusEl.style.background = "#e3f2fd";
+            statusEl.style.color = "#1976d2";
+            statusEl.textContent = "⏳ Compressing photo, please wait...";
+
+            const file = photoInput.files[0];
+            photoData = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement("canvas");
+                        const MAX_WIDTH = 800; // Paliliitin natin sa 800px max
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // I-convert sa JPEG na may 70% quality (maliit na file size)
+                        resolve(canvas.toDataURL("image/jpeg", 0.7)); 
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        statusEl.style.display = "block";
+        statusEl.style.background = "#e3f2fd";
+        statusEl.style.color = "#1976d2";
+        statusEl.textContent = "⏳ Saving to database...";
+
+        const response = await fetch(`${API_URL.replace("/items", "/verifications")}`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify({
@@ -226,7 +252,7 @@ async function submitVerification() {
                 actual_qty: parseInt(actualQty),
                 remarks: remarks,
                 verified_by: "Warehouse Personnel",
-                photo_data: photoData //
+                photo_data: photoData 
             })
         });
 
@@ -234,7 +260,6 @@ async function submitVerification() {
 
         if (result.success) {
             statusEl.style.display = "block";
-
             if (isMatched) {
                 statusEl.style.background = "#e8f5e9";
                 statusEl.style.color = "#2e7d32";
@@ -242,19 +267,25 @@ async function submitVerification() {
             } else {
                 statusEl.style.background = "#ffebee";
                 statusEl.style.color = "#c62828";
-                statusEl.textContent = `⚠️ DISCREPANCY — Expected: ${expectedQty}, Actual: ${actualQty}. Record saved for review.`;
+                statusEl.textContent = `⚠️ DISCREPANCY — Expected: ${expectedQty}, Actual: ${actualQty}. Record saved.`;
             }
 
             document.getElementById("actualQty").value = "";
             document.getElementById("remarks").value = "";
+            if(photoInput) photoInput.value = ""; 
+            document.getElementById("photoPreviewContainer").style.display = "none";
 
-            setTimeout(() => { statusEl.style.display = "none"; }, 5000);
+            setTimeout(() => {
+                statusEl.style.display = "none";
+            }, 5000);
         } else {
             alert("❌ " + result.message);
+            statusEl.style.display = "none";
         }
     } catch (error) {
         console.error("Verification error:", error);
         alert("⚠️ Cannot save verification. Check server connection.");
+        statusEl.style.display = "none";
     }
 }
 
