@@ -15,6 +15,41 @@ async function loadStats() {
 
         const items = result.data;
 
+                // ===== ALERTS LOGIC =====
+        const alertsContainer = document.getElementById("alertsContainer");
+        if (alertsContainer) {
+            let alertHTML = "";
+            
+            // 1. Out of Stock (Quantity == 0)
+            const outOfStock = items.filter(i => i.quantity === 0);
+            if (outOfStock.length > 0) {
+                alertHTML += `
+                    <div style="background: #ffebee; border-left: 5px solid #e74c3c; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #c62828; margin: 0 0 10px 0;">🚨 Out of Stock Alert (${outOfStock.length})</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #c62828; font-size: 14px;">
+                            ${outOfStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is completely out of stock!</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // 2. Low Stock (Quantity > 0 && Quantity <= reorder_level)
+            const lowStock = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level);
+            if (lowStock.length > 0) {
+                alertHTML += `
+                    <div style="background: #fff3e0; border-left: 5px solid #f39c12; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #d35400; margin: 0 0 10px 0;">⚠️ Low Stock Warning (${lowStock.length})</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #d35400; font-size: 14px;">
+                            ${lowStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is running low: <b>${i.quantity} left</b> (Reorder level: ${i.reorder_level})</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // I-display ang alerts
+            alertsContainer.innerHTML = alertHTML;
+        }
+
         document.getElementById("totalItems").textContent = items.length;
 
         const available = items.filter(i => i.condition === "Available").length;
