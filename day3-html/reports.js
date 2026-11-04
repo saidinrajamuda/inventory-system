@@ -178,7 +178,7 @@ function exportToCSV() {
     document.body.removeChild(link);
 }
 
-// ===== CUSTOM PRINT REPORT =====
+// ===== CUSTOM PRINT REPORT (Corporate Style) =====
 function printReport() {
     const data = window.currentReportData || [];
     if (data.length === 0) {
@@ -189,49 +189,80 @@ function printReport() {
     const total = data.length;
     const matched = data.filter(v => v.status === "Matched").length;
     const discrepancies = data.filter(v => v.status === "Discrepancy").length;
+    const printedBy = getCurrentUser().full_name || getCurrentUser().username;
 
     const printWindow = window.open('', '_blank');
+    
+    // Idinagdag natin ang styling para maging corporate report
     printWindow.document.write(`
         <html>
         <head>
             <title>Inventory Verification Report</title>
             <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
-                h1 { color: #1e3a5f; font-size: 24px; margin-bottom: 5px; }
-                .header { margin-bottom: 30px; border-bottom: 2px solid #1e3a5f; padding-bottom: 20px; }
-                .meta { font-size: 14px; color: #666; margin: 5px 0; }
-                .summary { display: flex; gap: 30px; margin: 20px 0; font-size: 16px; font-weight: 600; }
-                .summary span { color: #1e3a5f; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th { background-color: #1e3a5f; color: white; padding: 10px; text-align: left; font-size: 13px; }
-                td { padding: 10px; border-bottom: 1px solid #ddd; font-size: 13px; }
-                .status-matched { color: #2e7d32; font-weight: 600; }
-                .status-discrepancy { color: #c62828; font-weight: 600; }
-                .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }
-                @media print { body { padding: 0; } }
+                body { font-family: Arial, sans-serif; padding: 40px; color: #000; }
+                
+                /* Header Layout */
+                .header-container { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+                .logo { width: 80px; height: 80px; object-fit: contain; margin-right: 20px; }
+                .company-info h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
+                .company-info p { margin: 2px 0; font-size: 14px; }
+                
+                /* Report Title */
+                .report-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+                .report-date { text-align: center; font-size: 14px; margin-bottom: 20px; }
+
+                /* Summary */
+                .summary { margin-bottom: 20px; font-size: 14px; }
+                .summary span { margin-right: 30px; }
+
+                /* Table */
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+                th { background-color: #f0f0f0; border: 1px solid #000; padding: 8px; text-align: left; }
+                td { border: 1px solid #000; padding: 8px; }
+                
+                /* Signatures */
+                .signatures { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
+                .signature-box { text-align: center; width: 200px; }
+                .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 30px; }
+                .signature-name { font-weight: bold; font-size: 14px; margin: 0; }
+                .signature-title { font-size: 12px; margin: 0; }
+                
+                @media print { 
+                    body { padding: 0; } 
+                    .header-container { border-bottom: 2px solid #000; }
+                }
             </style>
         </head>
         <body>
-            <div class="header">
-                <h1>📦 Inventory Verification Report</h1>
-                <div class="meta">Company: Compact II Gencon Inc.</div>
-                <div class="meta">Generated: ${new Date().toLocaleString()}</div>
-                <div class="meta">Total Records: ${total}</div>
-                <div class="summary">
-                    <span>Matched: ${matched}</span>
-                    <span>Discrepancies: ${discrepancies}</span>
+            <div class="header-container">
+                <!-- Palitan mo ito ng path ng logo kung meron -->
+                <div style="width:80px; height:80px; background:#eee; display:flex; align-items:center; justify-content:center; margin-right:20px; border-radius:50%; font-weight:bold; font-size:12px; text-align:center;">LOGO<br>HERE</div>
+                <div class="company-info">
+                    <h1>COMPACT II GENCON INC.</h1>
+                    <p>1st Street, Don E. Sero, Rosary Heights 5, Cotabato City</p>
+                    <p>Web-Based Inventory Monitoring and Tracking System</p>
                 </div>
+            </div>
+
+            <div class="report-title">INVENTORY VERIFICATION REPORT</div>
+            <div class="report-date">As of ${new Date().toLocaleString()}</div>
+
+            <div class="summary">
+                <span><strong>Total Records:</strong> ${total}</span>
+                <span><strong>Matched:</strong> ${matched}</span>
+                <span><strong>Discrepancies:</strong> ${discrepancies}</span>
             </div>
 
             <table>
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Code</th>
+                        <th>Item Code</th>
                         <th>Item Name</th>
-                        <th>Expected</th>
-                        <th>Actual</th>
+                        <th>Expected Qty</th>
+                        <th>Actual Qty</th>
                         <th>Status</th>
+                        <th>Verified By</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -242,18 +273,29 @@ function printReport() {
                             <td>${v.name}</td>
                             <td>${v.expected_qty}</td>
                             <td>${v.actual_qty}</td>
-                            <td class="${v.status === "Matched" ? "status-matched" : "status-discrepancy"}">${v.status === "Matched" ? "✅ Matched" : "⚠️ Discrepancy"}</td>
+                            <td>${v.status}</td>
+                            <td>${v.verified_by}</td>
                         </tr>
                     `).join("")}
                 </tbody>
             </table>
 
-            <div class="footer">
-                © 2026 Compact II Gencon Inc. — Inventory Management System
+            <div class="signatures">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <p class="signature-name">${printedBy.toUpperCase()}</p>
+                    <p class="signature-title">Prepared By</p>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <p class="signature-name">RAUL S. LLANO</p>
+                    <p class="signature-title">Noted By (VP for Operations)</p>
+                </div>
             </div>
         </body>
         </html>
     `);
+    
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => {
