@@ -1,4 +1,4 @@
-// ===== REPORTS - DAY 18 (with RBAC) =====
+// ===== REPORTS - DAY 26 (with Photo) =====
 
 const API_VERIFICATIONS = `${window.API_BASE_URL}/api/verifications`;
 
@@ -29,7 +29,7 @@ async function loadVerifications() {
         console.error("Error loading verifications:", error);
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
+                <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
                     ⚠️ Cannot connect to server
                 </td>
             </tr>
@@ -44,7 +44,7 @@ function renderTable() {
     if (filteredVerifications.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
+                <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
                     📭 No records found.
                 </td>
             </tr>
@@ -57,6 +57,11 @@ function renderTable() {
         const statusColor = v.status === "Matched" ? "#2e7d32" : "#c62828";
         const statusBg = v.status === "Matched" ? "#e8f5e9" : "#ffebee";
         const statusIcon = v.status === "Matched" ? "✅" : "⚠️";
+
+        // Check kung may photo_data
+        const photoBtn = v.photo_data 
+            ? `<button onclick="viewPhoto('${v.photo_data}')" style="background:#3498db; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">📸 View</button>` 
+            : '—';
 
         return `
             <tr>
@@ -76,6 +81,7 @@ function renderTable() {
                     ">${statusIcon} ${v.status}</span>
                 </td>
                 <td style="font-size: 13px; color: #666;">${v.verified_by}</td>
+                <td>${photoBtn}</td>
             </tr>
         `;
     }).join("");
@@ -170,8 +176,6 @@ function exportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    console.log(`✅ Exported ${data.length} records to CSV`);
 }
 
 // ===== CUSTOM PRINT REPORT =====
@@ -256,6 +260,19 @@ function printReport() {
         printWindow.print();
         printWindow.close();
     }, 500);
+}
+
+// ===== VIEW PHOTO MODAL (BAGONG DAGDAG) =====
+function viewPhoto(base64String) {
+    const modal = document.getElementById("photoModal");
+    const img = document.getElementById("modalImage");
+    img.src = base64String;
+    modal.style.display = "flex";
+}
+
+function closePhoto() {
+    const modal = document.getElementById("photoModal");
+    modal.style.display = "none";
 }
 
 // ===== INITIALIZE =====
