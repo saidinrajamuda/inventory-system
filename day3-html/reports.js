@@ -189,54 +189,57 @@ function printReport() {
     const total = data.length;
     const matched = data.filter(v => v.status === "Matched").length;
     const discrepancies = data.filter(v => v.status === "Discrepancy").length;
-    const printedBy = getCurrentUser().full_name || getCurrentUser().username;
+    
+    // Kunin ang pangalan ng naka-login para sa "Prepared By"
+    const currentUser = getCurrentUser();
+    const printedBy = currentUser && currentUser.full_name ? currentUser.full_name : (currentUser ? currentUser.username : "Authorized Personnel");
 
     const printWindow = window.open('', '_blank');
     
-    // Idinagdag natin ang styling para maging corporate report
     printWindow.document.write(`
         <html>
         <head>
             <title>Inventory Verification Report</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 40px; color: #000; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
                 
                 /* Header Layout */
-                .header-container { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+                .header-container { display: flex; align-items: center; border-bottom: 3px double #1e3a5f; padding-bottom: 15px; margin-bottom: 25px; }
                 .logo { width: 80px; height: 80px; object-fit: contain; margin-right: 20px; }
-                .company-info h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
-                .company-info p { margin: 2px 0; font-size: 14px; }
+                .company-info h1 { margin: 0; font-size: 24px; color: #1e3a5f; text-transform: uppercase; letter-spacing: 1px; }
+                .company-info p { margin: 3px 0; font-size: 13px; color: #555; }
                 
                 /* Report Title */
-                .report-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-                .report-date { text-align: center; font-size: 14px; margin-bottom: 20px; }
+                .report-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+                .report-date { text-align: center; font-size: 13px; color: #666; margin-bottom: 25px; }
 
-                /* Summary */
-                .summary { margin-bottom: 20px; font-size: 14px; }
-                .summary span { margin-right: 30px; }
+                /* Summary Box */
+                .summary-box { background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 14px; display: flex; justify-content: space-around;}
+                .summary-box span { font-weight: 600; color: #1e3a5f; }
 
                 /* Table */
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-                th { background-color: #f0f0f0; border: 1px solid #000; padding: 8px; text-align: left; }
-                td { border: 1px solid #000; padding: 8px; }
+                th { background-color: #1e3a5f; color: white; padding: 10px; text-align: left; }
+                td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
                 
                 /* Signatures */
                 .signatures { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
-                .signature-box { text-align: center; width: 200px; }
-                .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 30px; }
-                .signature-name { font-weight: bold; font-size: 14px; margin: 0; }
-                .signature-title { font-size: 12px; margin: 0; }
+                .signature-box { text-align: center; width: 220px; }
+                .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 30px; }
+                .signature-name { font-weight: bold; font-size: 14px; margin: 0; text-transform: uppercase; }
+                .signature-title { font-size: 12px; margin: 0; color: #555; }
                 
                 @media print { 
                     body { padding: 0; } 
-                    .header-container { border-bottom: 2px solid #000; }
+                    .header-container { border-bottom: 3px double #1e3a5f; }
                 }
             </style>
         </head>
         <body>
             <div class="header-container">
-                <!-- Palitan mo ito ng path ng logo kung meron -->
-                <div style="width:80px; height:80px; background:#eee; display:flex; align-items:center; justify-content:center; margin-right:20px; border-radius:50%; font-weight:bold; font-size:12px; text-align:center;">LOGO<br>HERE</div>
+                <!-- Kung may logo.png ka sa folder, gagana ito. Kung wala, text lang lalabas -->
+                <img src="logo.png" class="logo" onerror="this.style.display='none'">
                 <div class="company-info">
                     <h1>COMPACT II GENCON INC.</h1>
                     <p>1st Street, Don E. Sero, Rosary Heights 5, Cotabato City</p>
@@ -244,13 +247,13 @@ function printReport() {
                 </div>
             </div>
 
-            <div class="report-title">INVENTORY VERIFICATION REPORT</div>
-            <div class="report-date">As of ${new Date().toLocaleString()}</div>
+            <div class="report-title">Inventory Verification Report</div>
+            <div class="report-date">Generated on: ${new Date().toLocaleString()}</div>
 
-            <div class="summary">
-                <span><strong>Total Records:</strong> ${total}</span>
-                <span><strong>Matched:</strong> ${matched}</span>
-                <span><strong>Discrepancies:</strong> ${discrepancies}</span>
+            <div class="summary-box">
+                <div>Total Records: <span>${total}</span></div>
+                <div>Matched: <span>${matched}</span></div>
+                <div>Discrepancies: <span>${discrepancies}</span></div>
             </div>
 
             <table>
@@ -259,8 +262,8 @@ function printReport() {
                         <th>Date</th>
                         <th>Item Code</th>
                         <th>Item Name</th>
-                        <th>Expected Qty</th>
-                        <th>Actual Qty</th>
+                        <th>Expected</th>
+                        <th>Actual</th>
                         <th>Status</th>
                         <th>Verified By</th>
                     </tr>
@@ -283,7 +286,7 @@ function printReport() {
             <div class="signatures">
                 <div class="signature-box">
                     <div class="signature-line"></div>
-                    <p class="signature-name">${printedBy.toUpperCase()}</p>
+                    <p class="signature-name">${printedBy}</p>
                     <p class="signature-title">Prepared By</p>
                 </div>
                 <div class="signature-box">
