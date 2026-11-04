@@ -1,4 +1,4 @@
-// ===== INVENTORY BACKEND - DAY 22 (with Warehouses) =====
+// ===== INVENTORY BACKEND - FINAL =====
 
 require("dotenv").config();
 
@@ -21,16 +21,15 @@ const corsOptions = {
     credentials: true
 };
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' })); // Limit para sa photo upload
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ===== AUTH MIDDLEWARE =====
 function authenticateToken(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-        return res.status(401).json({ success: false, message: "⚠️ No token provided. Please login." });
+        return res.status(401).json({ success: false, message: "⚠️ No token provided." });
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
@@ -42,14 +41,13 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// ===== ROLE MIDDLEWARE =====
 function authorizeRoles(...allowedRoles) {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({ success: false, message: "⚠️ Not authenticated." });
         }
         if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, message: `❌ Access denied. Required role: ${allowedRoles.join(" or ")}` });
+            return res.status(403).json({ success: false, message: `❌ Access denied.` });
         }
         next();
     };
@@ -57,10 +55,10 @@ function authorizeRoles(...allowedRoles) {
 
 // ===== ROOT =====
 app.get("/", (req, res) => {
-    res.json({ message: "📦 Inventory API with MySQL is running!", version: "2.1.0" });
+    res.json({ message: "📦 Inventory API with MySQL is running!", version: "2.2.0" });
 });
 
-// ===== GET ALL ITEMS (with warehouse info) =====
+// ===== ITEMS =====
 app.get("/api/items", authenticateToken, async (req, res) => {
     try {
         const [rows] = await promisePool.query(
@@ -74,151 +72,50 @@ app.get("/api/items", authenticateToken, async (req, res) => {
         );
         res.json({ success: true, count: rows.length, data: rows });
     } catch (error) {
-        console.error("GET /api/items error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// ===== GET SINGLE ITEM =====
-app.get("/api/items/:id", authenticateToken, async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const [rows] = await promisePool.query(
-            `SELECT i.*, i.condition_status AS \`condition\`, w.name AS warehouse_name
-             FROM items i
-             LEFT JOIN warehouses w ON i.warehouse_id = w.id
-             WHERE i.id = ?`,
-            [id]
-        );
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: `Item with ID ${id} not found` });
-        }
-        res.json({ success: true, data: rows[0] });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// ===== CREATE ITEM =====
 app.post("/api/items", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const { code, name, category, quantity, location, condition, unit, reorder_level, warehouse_id } = req.body;
-
         if (!code || !name || !category || quantity === undefined || !condition) {
             return res.status(400).json({ success: false, message: "⚠️ Missing required fields" });
         }
-
         const [existing] = await promisePool.query("SELECT id FROM items WHERE code = ?", [code.trim()]);
         if (existing.length > 0) {
             return res.status(409).json({ success: false, message: `❌ Unique Code "${code}" already exists!` });
         }
-
-        const [result] = await promisePool.query(
-            `INSERT INTO items 
-            (code, name, category, quantity, location, condition_status, unit, reorder_level, warehouse_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                code.trim(), name.trim(), category, parseInt(quantity),
-                location || "", condition, unit || "pcs",
-                reorder_level || 5, warehouse_id || null
-            ]
+        await promisePool.query(
+            `INSERT INTO items (code, name, category, quantity, location, condition_status, unit, reorder_level, warehouse_id) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [code.trim(), name.trim(), category, parseInt(quantity), location || "", condition, unit || "pcs", reorder_level || 5, warehouse_id || null]
         );
-
-        const [newItem] = await promisePool.query("SELECT * FROM items WHERE id = ?", [result.insertId]);
-
-        res.status(201).json({
-            success: true,
-            message: `✅ "${name}" added successfully!`,
-            data: newItem[0]
-        });
+        res.status(201).json({ success: true, message: `✅ "${name}" added successfully!` });
     } catch (error) {
-        console.error("POST /api/items error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// ===== UPDATE ITEM =====
 app.put("/api/items/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { code, name, category, quantity, location, condition, unit, reorder_level, warehouse_id } = req.body;
-
-        if (!code || !name || !category || quantity === undefined || !condition) {
-            return res.status(400).json({ success: false, message: "⚠️ Missing required fields" });
-        }
-
-        const [existing] = await promisePool.query("SELECT id FROM items WHERE id = ?", [id]);
-        if (existing.length === 0) {
-            return res.status(404).json({ success: false, message: `Item with ID ${id} not found` });
-        }
-
-        const [duplicate] = await promisePool.query("SELECT id FROM items WHERE code = ? AND id != ?", [code.trim(), id]);
-        if (duplicate.length > 0) {
-            return res.status(409).json({ success: false, message: `❌ Unique Code "${code}" already exists!` });
-        }
-
         await promisePool.query(
-            `UPDATE items SET 
-                code = ?, name = ?, category = ?, quantity = ?, 
-                location = ?, condition_status = ?, unit = ?, 
-                reorder_level = ?, warehouse_id = ?
-             WHERE id = ?`,
-            [
-                code.trim(), name.trim(), category, parseInt(quantity),
-                location || "", condition, unit || "pcs",
-                reorder_level || 5, warehouse_id || null, id
-            ]
+            `UPDATE items SET code = ?, name = ?, category = ?, quantity = ?, location = ?, condition_status = ?, unit = ?, reorder_level = ?, warehouse_id = ? WHERE id = ?`,
+            [code.trim(), name.trim(), category, parseInt(quantity), location || "", condition, unit || "pcs", reorder_level || 5, warehouse_id || null, id]
         );
-
-        const [updated] = await promisePool.query("SELECT * FROM items WHERE id = ?", [id]);
-
-        res.json({
-            success: true,
-            message: `✅ "${name}" updated successfully!`,
-            data: updated[0]
-        });
+        res.json({ success: true, message: `✅ "${name}" updated successfully!` });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// ===== DELETE ITEM =====
 app.delete("/api/items/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [rows] = await promisePool.query("SELECT name FROM items WHERE id = ?", [id]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: `Item with ID ${id} not found` });
-        }
-
         await promisePool.query("DELETE FROM items WHERE id = ?", [id]);
-        res.json({ success: true, message: `🗑️ "${rows[0].name}" deleted successfully!` });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// ===== QR CODE GENERATION =====
-app.get("/api/items/:id/qrcode", authenticateToken, async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const [rows] = await promisePool.query("SELECT id, code, name FROM items WHERE id = ?", [id]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: `Item with ID ${id} not found` });
-        }
-
-        const item = rows[0];
-        const qrData = JSON.stringify({ id: item.id, code: item.code, name: item.name });
-
-        const qrImage = await QRCode.toDataURL(qrData, {
-            width: 300,
-            margin: 2,
-            color: { dark: "#1e3a5f", light: "#ffffff" }
-        });
-
-        res.json({ success: true, data: { item, qrCode: qrImage } });
+        res.json({ success: true, message: `🗑️ Item deleted successfully!` });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -237,120 +134,132 @@ app.get("/api/warehouses", authenticateToken, async (req, res) => {
 app.post("/api/warehouses", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const { name, location, description } = req.body;
-
-        if (!name) {
-            return res.status(400).json({ success: false, message: "⚠️ Warehouse name is required" });
-        }
-
-        const [result] = await promisePool.query(
+        await promisePool.query(
             "INSERT INTO warehouses (name, location, description) VALUES (?, ?, ?)",
             [name.trim(), location || "", description || ""]
         );
-
-        res.status(201).json({
-            success: true,
-            message: `✅ Warehouse "${name}" added!`,
-            data: { id: result.insertId, name, location, description }
-        });
+        res.status(201).json({ success: true, message: `✅ Warehouse "${name}" added!` });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-app.delete("/api/warehouses/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+// ===== QR CODE =====
+app.get("/api/items/:id/qrcode", authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [rows] = await promisePool.query("SELECT name FROM warehouses WHERE id = ?", [id]);
+        const [rows] = await promisePool.query("SELECT id, code, name FROM items WHERE id = ?", [id]);
+        if (rows.length === 0) return res.status(404).json({ success: false, message: "Item not found" });
 
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Warehouse not found" });
-        }
-
-        await promisePool.query("DELETE FROM warehouses WHERE id = ?", [id]);
-        res.json({ success: true, message: `🗑️ Warehouse "${rows[0].name}" deleted!` });
+        const qrImage = await QRCode.toDataURL(JSON.stringify({ id: rows[0].id, code: rows[0].code, name: rows[0].name }), { width: 300 });
+        res.json({ success: true, data: { item: rows[0], qrCode: qrImage } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// CREATE verification record
+// ===== VERIFICATIONS (ITO YUNG KULANG KANINA) =====
+app.get("/api/verifications", authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await promisePool.query(
+            `SELECT v.*, i.code, i.name 
+             FROM verifications v
+             JOIN items i ON v.item_id = i.id
+             ORDER BY v.created_at DESC`
+        );
+        res.json({ success: true, count: rows.length, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 app.post("/api/verifications", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
     try {
         const { item_id, expected_qty, actual_qty, remarks, verified_by, photo_data } = req.body;
+        const status = (parseInt(expected_qty) === parseInt(actual_qty)) ? "Matched" : "Discrepancy";
 
-        if (!item_id || expected_qty === undefined || actual_qty === undefined) {
-            return res.status(400).json({
-                success: false,
-                message: "⚠️ Missing required fields"
-            });
-        }
-
-        const status = (parseInt(expected_qty) === parseInt(actual_qty))
-            ? "Matched"
-            : "Discrepancy";
-
-        const [result] = await promisePool.query(
-            `INSERT INTO verifications 
-            (item_id, expected_qty, actual_qty, status, remarks, verified_by, photo_data) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [
-                item_id,
-                parseInt(expected_qty),
-                parseInt(actual_qty),
-                status,
-                remarks || "",
-                verified_by || "Warehouse Personnel",
-                photo_data || null // Dito natin ise-save yung base64 image
-            ]
+        await promisePool.query(
+            `INSERT INTO verifications (item_id, expected_qty, actual_qty, status, remarks, verified_by, photo_data) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [item_id, parseInt(expected_qty), parseInt(actual_qty), status, remarks || "", verified_by || "Personnel", photo_data || null]
         );
-
-        res.status(201).json({
-            success: true,
-            message: status === "Matched"
-                ? "✅ Quantities match! Record saved."
-                : "⚠️ Discrepancy detected! Record saved.",
-            data: { id: result.insertId, item_id, expected_qty, actual_qty, status, remarks, verified_by }
-        });
+        res.status(201).json({ success: true, message: `✅ Record saved!`, data: { status } });
     } catch (error) {
-        console.error("POST /api/verifications error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// ===== AUTHENTICATION =====
+// ===== REQUESTS (ISSUE/RELEASE) =====
+app.get("/api/requests", authenticateToken, async (req, res) => {
+    try {
+        const [rows] = await promisePool.query(
+            `SELECT r.*, i.code, i.name AS item_name, i.quantity AS current_stock, i.unit FROM requests r JOIN items i ON r.item_id = i.id ORDER BY r.created_at DESC`
+        );
+        res.json({ success: true, count: rows.length, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.post("/api/requests", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
+    try {
+        const { item_id, quantity, purpose, project_site, requested_by, notes } = req.body;
+        await promisePool.query(
+            `INSERT INTO requests (item_id, quantity, purpose, project_site, requested_by, notes) VALUES (?, ?, ?, ?, ?, ?)`,
+            [item_id, parseInt(quantity), purpose || "", project_site || "", requested_by, notes || ""]
+        );
+        res.status(201).json({ success: true, message: `✅ Request submitted!` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.put("/api/requests/:id/approve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        await promisePool.query("UPDATE requests SET status = 'Approved', approved_by = ? WHERE id = ?", [req.user.username, req.params.id]);
+        res.json({ success: true, message: "✅ Request approved!" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.put("/api/requests/:id/reject", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        await promisePool.query("UPDATE requests SET status = 'Rejected', approved_by = ? WHERE id = ?", [req.user.username, req.params.id]);
+        res.json({ success: true, message: "Request rejected." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+app.put("/api/requests/:id/release", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const { released_to } = req.body;
+        const [rows] = await promisePool.query("SELECT * FROM requests WHERE id = ?", [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ success: false, message: "Request not found" });
+        
+        const reqData = rows[0];
+        const [items] = await promisePool.query("SELECT quantity FROM items WHERE id = ?", [reqData.item_id]);
+        const newQty = items[0].quantity - reqData.quantity;
+        const newCondition = newQty === 0 ? "Out of Stock" : (newQty < 10 ? "Low Stock" : "Available");
+
+        await promisePool.query("UPDATE items SET quantity = ?, condition_status = ? WHERE id = ?", [newQty, newCondition, reqData.item_id]);
+        await promisePool.query("UPDATE requests SET status = 'Released', released_by = ?, released_to = ? WHERE id = ?", [req.user.username, released_to || "N/A", req.params.id]);
+        res.json({ success: true, message: `✅ Released! New stock: ${newQty}` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ===== AUTH & USERS =====
 app.post("/api/auth/register", async (req, res) => {
     try {
         const { username, email, password, full_name, role } = req.body;
-
-        if (!username || !email || !password || !full_name) {
-            return res.status(400).json({ success: false, message: "⚠️ All fields are required" });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ success: false, message: "⚠️ Password must be at least 6 characters" });
-        }
-
-        const [existing] = await promisePool.query(
-            "SELECT id FROM users WHERE username = ? OR email = ?",
-            [username, email]
-        );
-
-        if (existing.length > 0) {
-            return res.status(409).json({ success: false, message: "❌ Username or email already exists" });
-        }
-
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        const [result] = await promisePool.query(
+        await promisePool.query(
             "INSERT INTO users (username, email, password, full_name, role) VALUES (?, ?, ?, ?, ?)",
             [username, email, hashedPassword, full_name, role || "Personnel"]
         );
-
-        res.status(201).json({
-            success: true,
-            message: "✅ User registered successfully!",
-            data: { id: result.insertId, username, email, full_name, role: role || "Personnel" }
-        });
+        res.status(201).json({ success: true, message: "✅ User registered!" });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -359,58 +268,22 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
     try {
         const { username, password } = req.body;
+        const [users] = await promisePool.query("SELECT * FROM users WHERE username = ? OR email = ?", [username, username]);
+        if (users.length === 0) return res.status(401).json({ success: false, message: "❌ Invalid credentials" });
 
-        if (!username || !password) {
-            return res.status(400).json({ success: false, message: "⚠️ Username and password are required" });
-        }
+        const isMatch = await bcrypt.compare(password, users[0].password);
+        if (!isMatch) return res.status(401).json({ success: false, message: "❌ Invalid credentials" });
 
-        const [users] = await promisePool.query(
-            "SELECT * FROM users WHERE username = ? OR email = ?",
-            [username, username]
-        );
-
-        if (users.length === 0) {
-            return res.status(401).json({ success: false, message: "❌ Invalid credentials" });
-        }
-
-        const user = users[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return res.status(401).json({ success: false, message: "❌ Invalid credentials" });
-        }
-
-        const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
-            JWT_SECRET,
-            { expiresIn: "8h" }
-        );
-
-        res.json({
-            success: true,
-            message: "✅ Login successful!",
-            data: {
-                token,
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    full_name: user.full_name,
-                    role: user.role
-                }
-            }
-        });
+        const token = jwt.sign({ id: users[0].id, username: users[0].username, role: users[0].role }, JWT_SECRET, { expiresIn: "8h" });
+        res.json({ success: true, data: { token, user: users[0] } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// ===== USERS (Admin only) =====
 app.get("/api/users", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
-        const [users] = await promisePool.query(
-            "SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id"
-        );
+        const [users] = await promisePool.query("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id");
         res.json({ success: true, count: users.length, data: users });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -419,242 +292,9 @@ app.get("/api/users", authenticateToken, authorizeRoles("Admin"), async (req, re
 
 app.delete("/api/users/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-
-        if (id === req.user.id) {
-            return res.status(400).json({ success: false, message: "⚠️ You cannot delete your own account." });
-        }
-
-        const [rows] = await promisePool.query("SELECT username FROM users WHERE id = ?", [id]);
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
-
-        await promisePool.query("DELETE FROM users WHERE id = ?", [id]);
-        res.json({ success: true, message: `🗑️ User "${rows[0].username}" deleted successfully!` });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// ===== REQUESTS (Issue/Release) =====
-
-// GET all requests
-app.get("/api/requests", authenticateToken, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            `SELECT r.*, i.code, i.name AS item_name, i.quantity AS current_stock, i.unit
-             FROM requests r
-             JOIN items i ON r.item_id = i.id
-             ORDER BY r.created_at DESC`
-        );
-        res.json({ success: true, count: rows.length, data: rows });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// CREATE request
-app.post("/api/requests", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
-    try {
-        const { item_id, quantity, purpose, project_site, requested_by, notes } = req.body;
-
-        if (!item_id || !quantity || !requested_by) {
-            return res.status(400).json({ success: false, message: "⚠️ Missing required fields" });
-        }
-
-        const [items] = await promisePool.query("SELECT quantity, name FROM items WHERE id = ?", [item_id]);
-        if (items.length === 0) {
-            return res.status(404).json({ success: false, message: "Item not found" });
-        }
-
-        if (parseInt(quantity) > items[0].quantity) {
-            return res.status(400).json({
-                success: false,
-                message: `⚠️ Not enough stock! Only ${items[0].quantity} available.`
-            });
-        }
-
-        const [result] = await promisePool.query(
-            `INSERT INTO requests (item_id, quantity, purpose, project_site, requested_by, notes)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [item_id, parseInt(quantity), purpose || "", project_site || "", requested_by, notes || ""]
-        );
-
-        res.status(201).json({
-            success: true,
-            message: `✅ Request for "${items[0].name}" submitted!`,
-            data: { id: result.insertId, item_id, quantity, status: "Pending" }
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// APPROVE request
-app.put("/api/requests/:id/approve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const [rows] = await promisePool.query("SELECT * FROM requests WHERE id = ?", [id]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Request not found" });
-        }
-        if (rows[0].status !== "Pending") {
-            return res.status(400).json({ success: false, message: "Request already processed" });
-        }
-
-        await promisePool.query(
-            "UPDATE requests SET status = 'Approved', approved_by = ? WHERE id = ?",
-            [req.user.username, id]
-        );
-        res.json({ success: true, message: "✅ Request approved!" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// RELEASE request — deducts stock
-app.put("/api/requests/:id/release", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const { released_to } = req.body;
-
-        const [rows] = await promisePool.query("SELECT * FROM requests WHERE id = ?", [id]);
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Request not found" });
-        }
-        const request = rows[0];
-        if (request.status !== "Approved") {
-            return res.status(400).json({ success: false, message: "Request must be approved first" });
-        }
-
-        const [items] = await promisePool.query("SELECT quantity FROM items WHERE id = ?", [request.item_id]);
-        const newQty = items[0].quantity - request.quantity;
-        if (newQty < 0) {
-            return res.status(400).json({ success: false, message: "Not enough stock" });
-        }
-
-        const newCondition = newQty === 0 ? "Out of Stock" : (newQty < 10 ? "Low Stock" : "Available");
-
-        await promisePool.query(
-            "UPDATE items SET quantity = ?, condition_status = ? WHERE id = ?",
-            [newQty, newCondition, request.item_id]
-        );
-        await promisePool.query(
-            "UPDATE requests SET status = 'Released', released_by = ?, released_to = ? WHERE id = ?",
-            [req.user.username, released_to || "N/A", id]
-        );
-
-        res.json({ success: true, message: `✅ Released! New stock: ${newQty}` });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// REJECT request
-app.put("/api/requests/:id/reject", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        await promisePool.query(
-            "UPDATE requests SET status = 'Rejected', approved_by = ? WHERE id = ?",
-            [req.user.username, id]
-        );
-        res.json({ success: true, message: "Request rejected." });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// ===== DISCREPANCIES =====
-
-// GET all discrepancies
-app.get("/api/discrepancies", authenticateToken, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            `SELECT d.*, i.code, i.name AS item_name, i.unit,
-                    v.verified_by, v.created_at AS verified_at
-             FROM discrepancies d
-             JOIN items i ON d.item_id = i.id
-             JOIN verifications v ON d.verification_id = v.id
-             ORDER BY d.created_at DESC`
-        );
-        res.json({ success: true, count: rows.length, data: rows });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// REVIEW discrepancy (Admin)
-app.put("/api/discrepancies/:id/review", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const { action, remarks } = req.body;
-
-        if (!action) {
-            return res.status(400).json({ success: false, message: "⚠️ Action is required" });
-        }
-
-        await promisePool.query(
-            `UPDATE discrepancies 
-             SET action = ?, remarks = ?, status = 'Reviewed', reviewed_by = ?
-             WHERE id = ?`,
-            [action, remarks || "", req.user.username, id]
-        );
-
-        res.json({ success: true, message: `✅ Discrepancy marked as "${action}"` });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// RESOLVE discrepancy — adjust item stock (Admin)
-app.put("/api/discrepancies/:id/resolve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const [rows] = await promisePool.query(
-            "SELECT * FROM discrepancies WHERE id = ?", [id]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Discrepancy not found" });
-        }
-
-        const disc = rows[0];
-
-        // I-update yung actual quantity ng item
-        const newCondition = disc.actual_qty === 0 ? "Out of Stock" : 
-                           (disc.actual_qty < 10 ? "Low Stock" : "Available");
-
-        await promisePool.query(
-            "UPDATE items SET quantity = ?, condition_status = ? WHERE id = ?",
-            [disc.actual_qty, newCondition, disc.item_id]
-        );
-
-        // I-update yung discrepancy status
-        await promisePool.query(
-            "UPDATE discrepancies SET status = 'Resolved', resolved_by = ? WHERE id = ?",
-            [req.user.username, id]
-        );
-
-        res.json({
-            success: true,
-            message: `✅ Resolved! Item stock adjusted to ${disc.actual_qty}.`
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-// REJECT discrepancy
-app.put("/api/discrepancies/:id/reject", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        await promisePool.query(
-            "UPDATE discrepancies SET status = 'Rejected', resolved_by = ? WHERE id = ?",
-            [req.user.username, id]
-        );
-        res.json({ success: true, message: "Discrepancy rejected." });
+        if (parseInt(req.params.id) === req.user.id) return res.status(400).json({ success: false, message: "Cannot delete yourself" });
+        await promisePool.query("DELETE FROM users WHERE id = ?", [req.params.id]);
+        res.json({ success: true, message: "User deleted." });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -663,7 +303,6 @@ app.put("/api/discrepancies/:id/reject", authenticateToken, authorizeRoles("Admi
 // ===== START SERVER =====
 async function startServer() {
     const connected = await testConnection();
-
     if (!connected) {
         console.error("❌ Cannot start server without database connection.");
         process.exit(1);
@@ -673,7 +312,7 @@ async function startServer() {
         console.log("=================================");
         console.log(`🚀 Server running on http://localhost:${PORT}`);
         console.log(`📦 API: http://localhost:${PORT}/api/items`);
-        console.log(`🗄️  Database: inventory_db`);
+        console.log(`🗄️  Database: connected`);
         console.log("=================================");
     });
 }
