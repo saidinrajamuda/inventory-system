@@ -1,38 +1,85 @@
-// ===== ITEM LIST - DAY 28 =====
+// ===== ITEM LIST WITH SITE FILTER =====
 const API_URL = `${window.API_BASE_URL}/api/items`;
+const API_WAREHOUSES = `${window.API_BASE_URL}/api/warehouses`;
 
+let allItems = []; // Dito natin itatabi lahat ng items
+
+// ===== LOAD ITEMS =====
 async function loadItems() {
     const tbody = document.getElementById("itemsTableBody");
     try {
         const response = await fetch(API_URL, { headers: authHeaders() });
         const result = await response.json();
 
-        if (!result.success || result.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">📭 No items found.</td></tr>`;
-            return;
+        if (result.success) {
+            allItems = result.data;
+            renderTable(allItems);
         }
-
-        tbody.innerHTML = result.data.map(item => `
-            <tr>
-                <td>${item.id}</td>
-                <td>${item.code}</td>
-                <td>${item.name}</td>
-                <td>${item.category}</td>
-                <td>${item.quantity} ${item.unit || ''}</td>
-                <td>${item.condition}</td>
-                <td>
-                    <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
-                    <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
-                </td>
-            </tr>
-        `).join("");
     } catch (error) {
         console.error("Error:", error);
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:red;">⚠️ Cannot connect to server</td></tr>`;
     }
 }
 
-// ===== SHOW QR & BARCODE (Re-using the same logic from script.js) =====
+// ===== LOAD WAREHOUSES (Para sa Filter Dropdown) =====
+async function loadWarehousesForFilter() {
+    try {
+        const response = await fetch(API_WAREHOUSES, { headers: authHeaders() });
+        const result = await response.json();
+
+        if (result.success) {
+            const select = document.getElementById("filterSite");
+            result.data.forEach(w => {
+                const opt = document.createElement("option");
+                opt.value = w.id; // Warehouse ID
+                opt.textContent = w.name; // E.g., "NDU- Cotabato", "CDO"
+                select.appendChild(opt);
+            });
+        }
+    } catch (error) {
+        console.error("Error loading warehouses:", error);
+    }
+}
+
+// ===== RENDER TABLE =====
+function renderTable(items) {
+    const tbody = document.getElementById("itemsTableBody");
+    
+    if (!items || items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">📭 No items found for this site.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = items.map(item => `
+        <tr>
+            <td>${item.id}</td>
+            <td>${item.code}</td>
+            <td>${item.name}</td>
+            <td>${item.category}</td>
+            <td>${item.quantity} ${item.unit || ''}</td>
+            <td>${item.condition}</td>
+            <td>
+                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
+                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+// ===== FILTER LOGIC =====
+function filterItemsBySite() {
+    const selectedSiteId = document.getElementById("filterSite").value;
+    
+    if (selectedSiteId === "All") {
+        renderTable(allItems); // Ipakita lahat
+    } else {
+        // I-filter base sa warehouse_id
+        const filtered = allItems.filter(item => item.warehouse_id == selectedSiteId);
+        renderTable(filtered);
+    }
+}
+
+// ===== SHOW QR & BARCODE (Existing code) =====
 async function showQRCode(id) {
     const response = await fetch(`${API_URL}/${id}/qrcode`, { headers: authHeaders() });
     const result = await response.json();
@@ -57,10 +104,12 @@ async function showBarcode(id) {
     }
 }
 
+// ===== INITIALIZE =====
 document.addEventListener("DOMContentLoaded", () => {
     if (!isLoggedIn()) {
         window.location.href = "login.html";
         return;
     }
     loadItems();
+    loadWarehousesForFilter(); // I-load yung mga sites sa dropdown
 });

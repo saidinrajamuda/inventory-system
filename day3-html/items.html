@@ -39,6 +39,37 @@
 
             <section class="content-card">
                 <h2>📋 All Items</h2>
+                            <section class="content-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0;">📋 All Items</h2>
+                    
+                    <!-- BAGONG DAGDAG: SITE FILTER -->
+                    <div>
+                        <label for="filterSite" style="font-size: 14px; font-weight: 600; margin-right: 5px;">Filter by Site:</label>
+                        <select id="filterSite" onchange="filterItemsBySite()" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                            <option value="All">All Sites</option>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Unique Code</th>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Condition</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <tr><td colspan="7" style="text-align:center;padding:20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </section>
                 <table>
                     <thead>
                         <tr>
