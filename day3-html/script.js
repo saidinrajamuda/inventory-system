@@ -1,4 +1,4 @@
-// ===== INVENTORY SYSTEM - DAY 18 (with RBAC) =====
+// ===== INVENTORY SYSTEM - DAY 28 (with Barcode) =====
 
 const API_URL = `${window.API_BASE_URL}/api/items`;
 
@@ -33,12 +33,12 @@ function renderTable(items) {
                 <button onclick="editItem(${item.id})" data-role="admin">Edit</button>
                 <button onclick="deleteItem(${item.id})" data-role="admin">Delete</button>
                 <button onclick="showQRCode(${item.id})" style="background-color: #27ae60;">QR</button>
+                <button onclick="showBarcode(${item.id})" style="background-color: #8e44ad;">Barcode</button>
             </td>
         `;
         tbody.appendChild(row);
     });
 
-    // I-apply yung role-based UI pagkatapos i-render
     if (typeof applyRoleBasedUI === "function") {
         applyRoleBasedUI();
     }
@@ -62,6 +62,31 @@ async function loadItems() {
     }
 }
 
+// ===== LOAD WAREHOUSES =====
+async function loadWarehouses() {
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/api/warehouses`, {
+            headers: authHeaders()
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            const select = document.getElementById("warehouse");
+            if (!select) return;
+
+            select.innerHTML = '<option value="">-- Select Warehouse --</option>';
+            result.data.forEach(w => {
+                const opt = document.createElement("option");
+                opt.value = w.id;
+                opt.textContent = `${w.name} — ${w.location}`;
+                select.appendChild(opt);
+            });
+        }
+    } catch (error) {
+        console.error("Error loading warehouses:", error);
+    }
+}
+
 // ===== ADD OR UPDATE ITEM =====
 async function addItem(event) {
     event.preventDefault();
@@ -81,7 +106,7 @@ async function addItem(event) {
         return;
     }
 
-        const itemData = { 
+    const itemData = { 
         code, name, category, quantity, location, condition,
         unit, 
         reorder_level: reorderLevel,
@@ -219,63 +244,71 @@ async function showQRCode(id) {
 
         const modal = document.createElement("div");
         modal.style.cssText = `
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; align-items: center;
+            justify-content: center; z-index: 9999;
         `;
 
         modal.innerHTML = `
-            <div style="
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                text-align: center;
-                max-width: 400px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            ">
+            <div style="background: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
                 <h2 style="color: #1e3a5f; margin-bottom: 8px;">${item.name}</h2>
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">${item.code}</p>
                 <img src="${qrCode}" alt="QR Code" style="width: 300px; height: 300px;" />
                 <p style="color: #999; font-size: 12px; margin-top: 15px;">📱 Scan this QR code</p>
-                <button id="closeQRBtn" style="
-                    margin-top: 20px;
-                    padding: 10px 30px;
-                    background: #1e3a5f;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">Close</button>
+                <button onclick="this.closest('div[style*=fixed]').remove()" style="margin-top: 20px; padding: 10px 30px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Close</button>
             </div>
         `;
 
         document.body.appendChild(modal);
-
-        document.getElementById("closeQRBtn").addEventListener("click", () => {
-            modal.remove();
-        });
-
-        modal.addEventListener("click", (e) => {
-            if (e.target === modal) modal.remove();
-        });
+        modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
     } catch (error) {
         console.error("❌ QR error:", error);
         alert("⚠️ Cannot load QR code.");
     }
 }
 
+// ===== SHOW BARCODE (DAY 28) =====
+async function showBarcode(id) {
+    try {
+        const response = await fetch(`${API_URL}/${id}/barcode`, {
+            headers: authHeaders()
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            alert(result.message);
+            return;
+        }
+
+        const { item, barcode } = result.data;
+
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; align-items: center;
+            justify-content: center; z-index: 9999;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                <h2 style="color: #1e3a5f; margin-bottom: 8px;">${item.name}</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">${item.code}</p>
+                <img src="${barcode}" alt="Barcode" style="max-width: 100%; height: auto;" />
+                <p style="color: #999; font-size: 12px; margin-top: 15px;">📠 Scan this Barcode</p>
+                <button onclick="this.closest('div[style*=fixed]').remove()" style="margin-top: 20px; padding: 10px 30px; background: #8e44ad; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Close</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
+    } catch (error) {
+        console.error("❌ Barcode error:", error);
+        alert("⚠️ Cannot load Barcode.");
+    }
+}
+
 // ===== SETUP =====
 document.addEventListener("DOMContentLoaded", () => {
-    if (!isLoggedIn()) {
-        window.location.href = "login.html";
-        return;
-    }document.addEventListener("DOMContentLoaded", () => {
     if (!isLoggedIn()) {
         window.location.href = "login.html";
         return;
@@ -289,38 +322,4 @@ document.addEventListener("DOMContentLoaded", () => {
     loadItems();
     loadWarehouses();
     console.log("✅ Frontend connected to backend API!");
-});
-
-    const form = document.querySelector("form");
-    if (form) {
-        form.addEventListener("submit", addItem);
-    }
-
-    loadItems();
-    console.log("✅ Frontend connected to backend API!");
-
-    // ===== LOAD WAREHOUSES =====
-async function loadWarehouses() {
-    try {
-        const response = await fetch(`${window.API_BASE_URL}/api/warehouses`, {
-            headers: authHeaders()
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            const select = document.getElementById("warehouse");
-            if (!select) return;
-
-            select.innerHTML = '<option value="">-- Select Warehouse --</option>';
-            result.data.forEach(w => {
-                const opt = document.createElement("option");
-                opt.value = w.id;
-                opt.textContent = `${w.name} — ${w.location}`;
-                select.appendChild(opt);
-            });
-        }
-    } catch (error) {
-        console.error("Error loading warehouses:", error);
-    }
-}
 });

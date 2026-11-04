@@ -1,7 +1,7 @@
 // ===== INVENTORY BACKEND - FINAL =====
 
 require("dotenv").config();
-
+const bwipjs = require("bwip-js");
 const express = require("express");
 const QRCode = require("qrcode");
 const cors = require("cors");
@@ -154,6 +154,43 @@ app.get("/api/items/:id/qrcode", authenticateToken, async (req, res) => {
         const qrImage = await QRCode.toDataURL(JSON.stringify({ id: rows[0].id, code: rows[0].code, name: rows[0].name }), { width: 300 });
         res.json({ success: true, data: { item: rows[0], qrCode: qrImage } });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ===== BARCODE GENERATION =====
+app.get("/api/items/:id/barcode", authenticateToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const [rows] = await promisePool.query("SELECT id, code, name FROM items WHERE id = ?", [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: `Item with ID ${id} not found` });
+        }
+
+        const item = rows[0];
+
+        // Generate Barcode (Code 128 format)
+        const png = await bwipjs.toBuffer({
+            bcid: 'code128',       // Barcode type
+            text: item.code,       // Text to encode
+            scale: 3,              // 3x scaling factor
+            height: 10,            // Bar height, in millimeters
+            includetext: true,     // Show human-readable text
+            textxalign: 'center',  // Always good to set this
+        });
+
+        const barcodeImage = `data:image/png;base64,${png.toString('base64')}`;
+
+        res.json({
+            success: true,
+            data: {
+                item: item,
+                barcode: barcodeImage
+            }
+        });
+    } catch (error) {
+        console.error("Barcode generation error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
