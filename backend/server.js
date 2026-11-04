@@ -272,44 +272,46 @@ app.delete("/api/warehouses/:id", authenticateToken, authorizeRoles("Admin"), as
     }
 });
 
-// ===== VERIFICATIONS =====
+// CREATE verification record
 app.post("/api/verifications", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
     try {
-        const { item_id, expected_qty, actual_qty, remarks, verified_by } = req.body;
+        const { item_id, expected_qty, actual_qty, remarks, verified_by, photo_data } = req.body;
 
         if (!item_id || expected_qty === undefined || actual_qty === undefined) {
-            return res.status(400).json({ success: false, message: "⚠️ Missing required fields" });
+            return res.status(400).json({
+                success: false,
+                message: "⚠️ Missing required fields"
+            });
         }
 
-        const status = (parseInt(expected_qty) === parseInt(actual_qty)) ? "Matched" : "Discrepancy";
+        const status = (parseInt(expected_qty) === parseInt(actual_qty))
+            ? "Matched"
+            : "Discrepancy";
 
         const [result] = await promisePool.query(
             `INSERT INTO verifications 
-            (item_id, expected_qty, actual_qty, status, remarks, verified_by) 
-            VALUES (?, ?, ?, ?, ?, ?)`,
-            [item_id, parseInt(expected_qty), parseInt(actual_qty), status, remarks || "", verified_by || "Warehouse Personnel"]
+            (item_id, expected_qty, actual_qty, status, remarks, verified_by, photo_data) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                item_id,
+                parseInt(expected_qty),
+                parseInt(actual_qty),
+                status,
+                remarks || "",
+                verified_by || "Warehouse Personnel",
+                photo_data || null // Dito natin ise-save yung base64 image
+            ]
         );
 
         res.status(201).json({
             success: true,
-            message: status === "Matched" ? "✅ Quantities match! Record saved." : "⚠️ Discrepancy detected! Record saved.",
+            message: status === "Matched"
+                ? "✅ Quantities match! Record saved."
+                : "⚠️ Discrepancy detected! Record saved.",
             data: { id: result.insertId, item_id, expected_qty, actual_qty, status, remarks, verified_by }
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-app.get("/api/verifications", authenticateToken, async (req, res) => {
-    try {
-        const [rows] = await promisePool.query(
-            `SELECT v.*, i.code, i.name 
-             FROM verifications v
-             JOIN items i ON v.item_id = i.id
-             ORDER BY v.created_at DESC`
-        );
-        res.json({ success: true, count: rows.length, data: rows });
-    } catch (error) {
+        console.error("POST /api/verifications error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 });

@@ -182,6 +182,19 @@ async function submitVerification() {
     if (!currentItem) {
         alert("⚠️ No item selected. Please scan a QR code first.");
         return;
+
+            // Kunin ang photo at i-convert sa base64
+        const photoInput = document.getElementById("photoInput");
+        let photoData = null;
+        
+        if (photoInput && photoInput.files.length > 0) {
+            const file = photoInput.files[0];
+            photoData = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+        }    
     }
 
     const actualQtyInput = document.getElementById("actualQty");
@@ -212,7 +225,8 @@ async function submitVerification() {
                 expected_qty: parseInt(expectedQty),
                 actual_qty: parseInt(actualQty),
                 remarks: remarks,
-                verified_by: "Warehouse Personnel"
+                verified_by: "Warehouse Personnel",
+                photo_data: photoData //
             })
         });
 
@@ -243,3 +257,27 @@ async function submitVerification() {
         alert("⚠️ Cannot save verification. Check server connection.");
     }
 }
+
+// ===== PHOTO PREVIEW LOGIC =====
+document.addEventListener("DOMContentLoaded", () => {
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const photoPreviewContainer = document.getElementById("photoPreviewContainer");
+
+    if (photoInput) {
+        photoInput.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    photoPreview.src = event.target.result;
+                    photoPreviewContainer.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.src = "";
+                photoPreviewContainer.style.display = "none";
+            }
+        });
+    }
+});
