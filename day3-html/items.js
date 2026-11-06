@@ -44,27 +44,25 @@ async function loadWarehousesForFilter() {
 // ===== RENDER TABLE =====
 function renderTable(items) {
     const tbody = document.getElementById("itemsTableBody");
-    
+
+    // 1. Check kung walang laman
     if (!items || items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">📭 No items found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">📭 No items found.</td></tr>`;
         return;
     }
 
+    // 2. I-render ang table (may data-label para sa mobile design)
     tbody.innerHTML = items.map(item => `
         <tr>
-            <td>${item.id}</td>
-            <td><strong>${item.code}</strong></td>
-            <td>${item.name}</td>
-            <td>${item.category}</td>
-            <td>${item.quantity} ${item.unit || ''}</td>
-            <td>
-                <span style="padding: 4px 8px; border-radius: 4px; background: #e9ecef; font-size: 12px;">
-                    ${item.condition}
-                </span>
-            </td>
-            <td>
-                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60; padding: 5px 10px; font-size: 12px;">QR</button>
-                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad; padding: 5px 10px; font-size: 12px;">Barcode</button>
+            <td data-label="ID">${item.id}</td>
+            <td data-label="Unique Code">${item.code}</td>
+            <td data-label="Item Name">${item.name}</td>
+            <td data-label="Category">${item.category}</td>
+            <td data-label="Quantity">${item.quantity} ${item.unit || ''}</td>
+            <td data-label="Condition">${item.condition}</td>
+            <td data-label="Actions">
+                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px;">QR</button>
+                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Barcode</button>
             </td>
         </tr>
     `).join("");
@@ -128,6 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadItems();
     loadWarehousesForFilter(); 
 });
+
 // ===== PRINT ITEM LIST (Corporate Style) =====
 function printItemList() {
     const rows = document.querySelectorAll("#itemsTableBody tr");

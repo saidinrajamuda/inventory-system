@@ -293,3 +293,60 @@ tbody button {
     opacity: 0.8;
     margin: 0;
 }
+/* ===== MOBILE RESPONSIVE TABLE (Para maging cards sa phone) ===== */
+@media (max-width: 768px) {
+    /* Itago ang table headers sa phone */
+    table thead {
+        display: none;
+    }
+
+    /* Gawing block (card) ang bawat row */
+    table, table tbody, table tr, table td {
+        display: block;
+        width: 100%;
+    }
+
+    /* Design ng bawat card */
+    table tr {
+        background-color: #fff;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        padding: 10px;
+    }
+
+    /* Design ng bawat cell sa loob ng card */
+    table td {
+        text-align: right;
+        padding: 10px 10px 10px 50%; /* Bigyan ng space sa kaliwa para sa label */
+        border-bottom: 1px solid #eee;
+        position: relative;
+        border: none;
+    }
+
+    /* Walang border sa pinakababang cell */
+    table td:last-child {
+        border-bottom: none;
+    }
+
+    /* Gumawa ng Label sa kaliwa (e.g. "Item Name:") */
+    table td::before {
+        content: attr(data-label); /* Kukunin yung data-label attribute sa HTML */
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #1e3a5f;
+    }
+
+    /* Ayusin ang laki ng mga buttons sa phone */
+    table td button {
+        margin-top: 5px;
+        width: 100%;
+        padding: 8px;
+    }
+}
