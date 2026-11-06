@@ -1,4 +1,4 @@
-// ===== INVENTORY BACKEND - FINAL =====
+// ===== INVENTORY BACKEND - FINAL (FIXED) =====
 
 require("dotenv").config();
 const bwipjs = require("bwip-js");
@@ -21,7 +21,7 @@ const corsOptions = {
     credentials: true
 };
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '50mb' })); // Limit para sa photo upload
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 function authenticateToken(req, res, next) {
@@ -55,7 +55,7 @@ function authorizeRoles(...allowedRoles) {
 
 // ===== ROOT =====
 app.get("/", (req, res) => {
-    res.json({ message: "📦 Inventory API with MySQL is running!", version: "2.2.0" });
+    res.json({ message: "📦 Inventory API with MySQL is running!", version: "2.3.0" });
 });
 
 // ===== ITEMS =====
@@ -71,6 +71,31 @@ app.get("/api/items", authenticateToken, async (req, res) => {
              ORDER BY i.id ASC`
         );
         res.json({ success: true, count: rows.length, data: rows });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// ✅ FIX #2: GET SINGLE ITEM (para sa editItem)
+app.get("/api/items/:id", authenticateToken, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const [rows] = await promisePool.query(
+            `SELECT i.id, i.code, i.name, i.category, i.quantity,
+                    i.location, i.condition_status AS \`condition\`,
+                    i.unit, i.reorder_level, i.warehouse_id,
+                    w.name AS warehouse_name
+             FROM items i
+             LEFT JOIN warehouses w ON i.warehouse_id = w.id
+             WHERE i.id = ?`,
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Item not found" });
+        }
+
+        res.json({ success: true, data: rows[0] });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -170,14 +195,13 @@ app.get("/api/items/:id/barcode", authenticateToken, async (req, res) => {
 
         const item = rows[0];
 
-        // Generate Barcode (Code 128 format)
         const png = await bwipjs.toBuffer({
-            bcid: 'code128',       // Barcode type
-            text: item.code,       // Text to encode
-            scale: 3,              // 3x scaling factor
-            height: 10,            // Bar height, in millimeters
-            includetext: true,     // Show human-readable text
-            textxalign: 'center',  // Always good to set this
+            bcid: 'code128',
+            text: item.code,
+            scale: 3,
+            height: 10,
+            includetext: true,
+            textxalign: 'center',
         });
 
         const barcodeImage = `data:image/png;base64,${png.toString('base64')}`;
@@ -195,7 +219,7 @@ app.get("/api/items/:id/barcode", authenticateToken, async (req, res) => {
     }
 });
 
-// ===== VERIFICATIONS (ITO YUNG KULANG KANINA) =====
+// ===== VERIFICATIONS =====
 app.get("/api/verifications", authenticateToken, async (req, res) => {
     try {
         const [rows] = await promisePool.query(
@@ -231,7 +255,6 @@ app.put("/api/verifications/:id/resolve", authenticateToken, authorizeRoles("Adm
         const id = parseInt(req.params.id);
         const { remarks } = req.body;
 
-        // Palitan natin yung status to "Resolved" at i-append yung remarks
         await promisePool.query(
             "UPDATE verifications SET status = 'Resolved', remarks = CONCAT(IFNULL(remarks, ''), ' | RESOLVED: ', ?) WHERE id = ?",
             [remarks, id]
@@ -258,6 +281,11 @@ app.get("/api/requests", authenticateToken, async (req, res) => {
 app.post("/api/requests", authenticateToken, authorizeRoles("Admin", "Personnel"), async (req, res) => {
     try {
         const { item_id, quantity, purpose, project_site, requested_by, notes } = req.body;
+
+        if (!item_id || !quantity || quantity <= 0) {
+            return res.status(400).json({ success: false, message: "⚠️ Invalid item or quantity." });
+        }
+
         await promisePool.query(
             `INSERT INTO requests (item_id, quantity, purpose, project_site, requested_by, notes) VALUES (?, ?, ?, ?, ?, ?)`,
             [item_id, parseInt(quantity), purpose || "", project_site || "", requested_by, notes || ""]
@@ -270,6 +298,12 @@ app.post("/api/requests", authenticateToken, authorizeRoles("Admin", "Personnel"
 
 app.put("/api/requests/:id/approve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
+        const [rows] = await promisePool.query("SELECT status FROM requests WHERE id = ?", [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ success: false, message: "Request not found" });
+        if (rows[0].status !== "Pending") {
+            return res.status(400).json({ success: false, message: `❌ Cannot approve. Status is "${rows[0].status}".` });
+        }
+
         await promisePool.query("UPDATE requests SET status = 'Approved', approved_by = ? WHERE id = ?", [req.user.username, req.params.id]);
         res.json({ success: true, message: "✅ Request approved!" });
     } catch (error) {
@@ -279,6 +313,12 @@ app.put("/api/requests/:id/approve", authenticateToken, authorizeRoles("Admin"),
 
 app.put("/api/requests/:id/reject", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
+        const [rows] = await promisePool.query("SELECT status FROM requests WHERE id = ?", [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ success: false, message: "Request not found" });
+        if (rows[0].status !== "Pending") {
+            return res.status(400).json({ success: false, message: `❌ Cannot reject. Status is "${rows[0].status}".` });
+        }
+
         await promisePool.query("UPDATE requests SET status = 'Rejected', approved_by = ? WHERE id = ?", [req.user.username, req.params.id]);
         res.json({ success: true, message: "Request rejected." });
     } catch (error) {
@@ -286,35 +326,97 @@ app.put("/api/requests/:id/reject", authenticateToken, authorizeRoles("Admin"), 
     }
 });
 
+// ✅ FIX #4: Stock check + status validation sa release
 app.put("/api/requests/:id/release", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
         const { released_to } = req.body;
         const [rows] = await promisePool.query("SELECT * FROM requests WHERE id = ?", [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ success: false, message: "Request not found" });
-        
+
         const reqData = rows[0];
-        const [items] = await promisePool.query("SELECT quantity FROM items WHERE id = ?", [reqData.item_id]);
+
+        if (reqData.status !== "Approved") {
+            return res.status(400).json({ 
+                success: false, 
+                message: `❌ Cannot release. Request status is "${reqData.status}".` 
+            });
+        }
+
+        const [items] = await promisePool.query("SELECT quantity, reorder_level FROM items WHERE id = ?", [reqData.item_id]);
+        if (items.length === 0) return res.status(404).json({ success: false, message: "Item not found" });
+
+        if (items[0].quantity < reqData.quantity) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `❌ Insufficient stock. Available: ${items[0].quantity}, Requested: ${reqData.quantity}` 
+            });
+        }
+
         const newQty = items[0].quantity - reqData.quantity;
-        const newCondition = newQty === 0 ? "Out of Stock" : (newQty < 10 ? "Low Stock" : "Available");
+        const newCondition = newQty === 0 
+            ? "Out of Stock" 
+            : (newQty <= items[0].reorder_level ? "Low Stock" : "Available");
 
         await promisePool.query("UPDATE items SET quantity = ?, condition_status = ? WHERE id = ?", [newQty, newCondition, reqData.item_id]);
-        await promisePool.query("UPDATE requests SET status = 'Released', released_by = ?, released_to = ? WHERE id = ?", [req.user.username, released_to || "N/A", req.params.id]);
-        res.json({ success: true, message: `✅ Released! New stock: ${newQty}` });
+        await promisePool.query(
+            "UPDATE requests SET status = 'Released', released_by = ?, released_to = ? WHERE id = ?",
+            [req.user.username, released_to || "N/A", req.params.id]
+        );
+        res.json({ success: true, message: `✅ Released! New stock: ${newQty}`, data: { newQty } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
 // ===== AUTH & USERS =====
+// ✅ FIX #1: Admin-only register (except first user)
 app.post("/api/auth/register", async (req, res) => {
     try {
-        const { username, email, password, full_name, role } = req.body;
+        const { username, email, password, full_name } = req.body;
+        let { role } = req.body;
+
+        if (!username || !email || !password || !full_name) {
+            return res.status(400).json({ success: false, message: "⚠️ Missing required fields." });
+        }
+
+        // Check kung first user (walang laman ang users table)
+        const [existing] = await promisePool.query("SELECT COUNT(*) AS count FROM users");
+        const isFirstUser = existing[0].count === 0;
+
+        if (isFirstUser) {
+            // First user → force Admin
+            role = "Admin";
+        } else {
+            // Kailangan Admin token
+            const authHeader = req.headers["authorization"];
+            const token = authHeader && authHeader.split(" ")[1];
+
+            if (!token) {
+                return res.status(401).json({ success: false, message: "⚠️ Admin token required to register users." });
+            }
+
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                if (decoded.role !== "Admin") {
+                    return res.status(403).json({ success: false, message: "❌ Only Admins can register new users." });
+                }
+            } catch (err) {
+                return res.status(403).json({ success: false, message: "❌ Invalid or expired token." });
+            }
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         await promisePool.query(
             "INSERT INTO users (username, email, password, full_name, role) VALUES (?, ?, ?, ?, ?)",
             [username, email, hashedPassword, full_name, role || "Personnel"]
         );
-        res.status(201).json({ success: true, message: "✅ User registered!" });
+
+        res.status(201).json({ 
+            success: true, 
+            message: isFirstUser 
+                ? "✅ First Admin account created!" 
+                : "✅ User registered!" 
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -345,9 +447,33 @@ app.get("/api/users", authenticateToken, authorizeRoles("Admin"), async (req, re
     }
 });
 
+// ✅ BONUS: Update user role (para sa Add User feature / role change)
+app.put("/api/users/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { role } = req.body;
+
+        if (!["Admin", "Personnel", "Management"].includes(role)) {
+            return res.status(400).json({ success: false, message: "❌ Invalid role." });
+        }
+
+        // Bawal i-demote ang sarili
+        if (id === req.user.id && role !== "Admin") {
+            return res.status(400).json({ success: false, message: "❌ Cannot change your own role." });
+        }
+
+        await promisePool.query("UPDATE users SET role = ? WHERE id = ?", [role, id]);
+        res.json({ success: true, message: `✅ User role updated to "${role}".` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 app.delete("/api/users/:id", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
     try {
-        if (parseInt(req.params.id) === req.user.id) return res.status(400).json({ success: false, message: "Cannot delete yourself" });
+        if (parseInt(req.params.id) === req.user.id) {
+            return res.status(400).json({ success: false, message: "❌ Cannot delete yourself." });
+        }
         await promisePool.query("DELETE FROM users WHERE id = ?", [req.params.id]);
         res.json({ success: true, message: "User deleted." });
     } catch (error) {

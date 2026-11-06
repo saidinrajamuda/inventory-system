@@ -1,8 +1,20 @@
 // ===== REGISTER PAGE =====
 
-redirectIfLoggedIn();
+// ⚠️ IMPORTANT: 
+// - Kung WALANG naka-login: pwede pa rin (para sa first admin setup)
+// - Kung may naka-login: pwede rin (para sa admin adding new user)
+// Hindi na natin i-redirect automatic.
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Kung naka-login ang user, ipakita ang "Back to Dashboard" button
+    if (isLoggedIn()) {
+        const backLink = document.createElement("div");
+        backLink.className = "auth-link";
+        backLink.style.marginTop = "10px";
+        backLink.innerHTML = `← <a href="dashboard.html">Back to Dashboard</a>`;
+        document.querySelector(".auth-card").appendChild(backLink);
+    }
+
     const form = document.getElementById("registerForm");
     if (form) {
         form.addEventListener("submit", handleRegister);
@@ -29,19 +41,35 @@ async function handleRegister(event) {
     }
 
     try {
+        // ✅ Kung may naka-login, i-attach ang token (kailangan ng admin)
+        const headers = { "Content-Type": "application/json" };
+        if (getToken()) {
+            headers["Authorization"] = `Bearer ${getToken()}`;
+        }
+
         const response = await fetch(`${API_AUTH}/register`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ full_name: fullName, email, username, password, role })
         });
 
         const result = await response.json();
 
         if (result.success) {
-            showSuccess("Account created successfully! Redirecting to login...");
-            setTimeout(() => {
-                window.location.href = "login.html";
-            }, 2000);
+            showSuccess(result.message || "Account created successfully!");
+
+            // Kung naka-login (admin adding user), i-refresh lang ang form
+            if (isLoggedIn()) {
+                document.getElementById("registerForm").reset();
+                setTimeout(() => {
+                    document.getElementById("successMsg").style.display = "none";
+                }, 3000);
+            } else {
+                // First admin setup → redirect to login
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 2000);
+            }
         } else {
             showError(result.message || "Registration failed.");
         }
