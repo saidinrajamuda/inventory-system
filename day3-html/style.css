@@ -241,13 +241,13 @@ tbody button {
 
 /* ===== MOBILE RESPONSIVE TABLE (Clean & Compact) ===== */
 @media (max-width: 768px) {
-    /* Itago ang header ng table */
+    /* Itago ang original table header */
     table thead {
         display: none;
     }
 
-    /* Gawing block (card) ang bawat row */
-    table, table tbody, table tr, table td {
+    /* Gawing block (card) ang table at rows */
+    table, table tbody, table tr {
         display: block;
         width: 100%;
     }
@@ -256,9 +256,9 @@ tbody button {
     table tr {
         background-color: #fff;
         margin-bottom: 15px;
-        border: 1px solid #e0e0e0;
+        border: 1px solid #ddd;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         padding: 10px 15px;
     }
 
@@ -267,41 +267,45 @@ tbody button {
         display: flex;
         justify-content: space-between; /* Label sa kaliwa, Value sa kanan */
         align-items: center;
-        padding: 8px 0;
+        padding: 10px 0;
         border-bottom: 1px solid #f0f0f0;
         text-align: right;
         font-size: 14px;
+        color: #333;
     }
 
     /* Walang border sa pinakababang cell */
     table td:last-child {
         border-bottom: none;
-        flex-direction: column; /* Gawing pababa ang buttons */
-        align-items: flex-end;
+        display: block; /* Para mag-stack ang buttons */
+        text-align: center;
+        padding-top: 15px;
     }
 
-    /* Gumawa ng Label sa kaliwa */
+    /* Ipakita ang Label sa kaliwa */
     table td::before {
         content: attr(data-label);
         font-weight: 600;
-        color: #555;
+        color: #1e3a5f;
         text-align: left;
-        margin-right: 15px;
+        padding-right: 15px;
     }
 
-    /* Design para sa mga buttons sa mobile */
+    /* Design ng mga buttons sa mobile (hindi na pahabang block) */
     table td[data-label="Actions"] button {
-        width: 100%;
-        margin-bottom: 8px;
-        padding: 10px;
-        font-size: 13px;
+        display: inline-block;
+        width: auto;
+        padding: 8px 12px;
+        margin: 5px 3px;
+        font-size: 12px;
     }
     
-    /* Konting space sa pagitan ng search bar at table */
+    /* Konting adjust sa padding ng card */
     .content-card {
-        padding: 15px;
+        padding: 10px;
     }
 }
+
 /* ===== SIDEBAR LOGO ===== */
 .sidebar-header {
     text-align: center;

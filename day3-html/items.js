@@ -45,14 +45,12 @@ async function loadWarehousesForFilter() {
 function renderTable(items) {
     const tbody = document.getElementById("itemsTableBody");
 
-    // 1. Check kung walang laman
     if (!items || items.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px;">📭 No items found.</td></tr>`;
         return;
     }
 
-    // 2. I-render ang table (may data-label para sa mobile design)
-        tbody.innerHTML = items.map(item => `
+    tbody.innerHTML = items.map(item => `
         <tr>
             <td data-label="ID">${item.id}</td>
             <td data-label="Code">${item.code}</td>
@@ -61,8 +59,8 @@ function renderTable(items) {
             <td data-label="Qty">${item.quantity} ${item.unit || ''}</td>
             <td data-label="Condition">${item.condition}</td>
             <td data-label="Actions">
-                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
-                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
+                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer;">QR</button>
+                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad; color: white; border: none; border-radius: 4px; cursor: pointer;">Barcode</button>
             </td>
         </tr>
     `).join("");
