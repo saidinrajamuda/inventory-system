@@ -127,23 +127,32 @@
             </section>
 
             <section class="content-card">
-                <h2>Item List</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Unique Code</th>
-                            <th>Item Name</th>
-                            <th>Category</th>
-                            <th>Quantity</th>
-                            <th>Condition</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Dinamiko itong laman via script.js -->
-                    </tbody>
-                </table>
+                <!-- SEARCH BAR PARA SA ADD ITEM PAGE -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="margin: 0;">Item List</h2>
+                    <div>
+                        <input type="text" id="searchInAdd" onkeyup="filterItemsInAdd()" placeholder="🔍 Search name or code..." style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 250px; font-size: 14px;">
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Unique Code</th>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Quantity</th>
+                                <th>Condition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Dinamiko itong laman via script.js -->
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </main>
     </div>

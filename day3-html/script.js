@@ -1,19 +1,24 @@
-// ===== INVENTORY SYSTEM - DAY 28 (with Barcode) =====
+// ===== INVENTORY SYSTEM - DAY 28 (with Barcode & Search) =====
 
 const API_URL = `${window.API_BASE_URL}/api/items`;
 
 let editingId = null;
+let allItemsForAdd = []; // Dito natin itatabi lahat ng items para sa search
 
 // ===== RENDER TABLE =====
 function renderTable(items) {
-    const tbody = document.querySelector("tbody");
+    // Siguraduhing yung nasa Add Item page ang hahanapin, hindi yung sa items.html
+    const tbody = document.getElementById("itemsTableBody"); 
+    
+    if (!tbody) return; // Safety check kung wala yung table sa page
+
     tbody.innerHTML = "";
 
     if (!items || items.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
-                    📭 No items yet. Add your first item above!
+                    📭 No items found.
                 </td>
             </tr>
         `;
@@ -53,13 +58,26 @@ async function loadItems() {
         const result = await response.json();
 
         if (result.success) {
-            renderTable(result.data);
+            allItemsForAdd = result.data; // I-save lahat para sa search
+            renderTable(allItemsForAdd);
             console.log(`✅ Loaded ${result.count} items from backend`);
         }
     } catch (error) {
         console.error("❌ Error loading items:", error);
         alert("⚠️ Cannot connect to server. Make sure backend is running!");
     }
+}
+
+// ===== FILTER ITEMS (Para sa Search Bar) =====
+function filterItemsInAdd() {
+    const query = document.getElementById("searchInAdd").value.toLowerCase();
+    
+    const filtered = allItemsForAdd.filter(item => 
+        item.name.toLowerCase().includes(query) || 
+        item.code.toLowerCase().includes(query)
+    );
+    
+    renderTable(filtered);
 }
 
 // ===== LOAD WAREHOUSES =====
@@ -136,6 +154,9 @@ async function addItem(event) {
             alert(result.message);
             resetForm();
             loadItems();
+            // Clear search bar kung meron
+            const searchBar = document.getElementById("searchInAdd");
+            if(searchBar) searchBar.value = "";
         } else {
             alert(result.message);
         }
@@ -267,7 +288,7 @@ async function showQRCode(id) {
     }
 }
 
-// ===== SHOW BARCODE (DAY 28) =====
+// ===== SHOW BARCODE =====
 async function showBarcode(id) {
     try {
         const response = await fetch(`${API_URL}/${id}/barcode`, {
