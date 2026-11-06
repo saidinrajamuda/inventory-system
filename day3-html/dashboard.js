@@ -2,7 +2,7 @@
 
 const API_ITEMS = `${window.API_BASE_URL}/api/items`;
 const API_VERIFICATIONS = `${window.API_BASE_URL}/api/verifications`;
-
+let alertsDismissed = false; // Flag para malaman kung na-close na ng user
 // ===== LOAD STATS =====
 async function loadStats() {
     try {
@@ -18,33 +18,43 @@ async function loadStats() {
                 // ===== ALERTS LOGIC =====
         const alertsContainer = document.getElementById("alertsContainer");
         if (alertsContainer) {
-            let alertHTML = "";
-            
-            // 1. Out of Stock (Quantity == 0)
-            const outOfStock = items.filter(i => i.quantity === 0);
-            if (outOfStock.length > 0) {
-                alertHTML += `
-                    <div style="background: #ffebee; border-left: 5px solid #e74c3c; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <h4 style="color: #c62828; margin: 0 0 10px 0;">🚨 Out of Stock Alert (${outOfStock.length})</h4>
-                        <ul style="margin: 0; padding-left: 20px; color: #c62828; font-size: 14px;">
-                            ${outOfStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is completely out of stock!</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
+            if (alertsDismissed) {
+                // Kung na-dismiss na, wag nang ipakita ulit
+                alertsContainer.innerHTML = ""; 
+            } else {
+                let alertHTML = "";
+                
+                // 1. Out of Stock
+                const outOfStock = items.filter(i => i.quantity === 0);
+                if (outOfStock.length > 0) {
+                    alertHTML += `
+                        <div style="position: relative; background: #ffebee; border-left: 5px solid #e74c3c; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <span onclick="dismissAlerts()" style="position: absolute; top: 10px; right: 15px; cursor: pointer; color: #c62828; font-size: 20px; font-weight: bold;" title="Dismiss">&times;</span>
+                            <h4 style="color: #c62828; margin: 0 0 10px 0;">🚨 Out of Stock Alert (${outOfStock.length})</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #c62828; font-size: 14px;">
+                                ${outOfStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is completely out of stock!</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
 
-            // 2. Low Stock (Quantity > 0 && Quantity <= reorder_level)
-            const lowStock = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level);
-            if (lowStock.length > 0) {
-                alertHTML += `
-                    <div style="background: #fff3e0; border-left: 5px solid #f39c12; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <h4 style="color: #d35400; margin: 0 0 10px 0;">⚠️ Low Stock Warning (${lowStock.length})</h4>
-                        <ul style="margin: 0; padding-left: 20px; color: #d35400; font-size: 14px;">
-                            ${lowStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is running low: <b>${i.quantity} left</b> (Reorder level: ${i.reorder_level})</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
+                // 2. Low Stock
+                const lowStock = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level);
+                if (lowStock.length > 0) {
+                    alertHTML += `
+                        <div style="position: relative; background: #fff3e0; border-left: 5px solid #f39c12; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <span onclick="dismissAlerts()" style="position: absolute; top: 10px; right: 15px; cursor: pointer; color: #d35400; font-size: 20px; font-weight: bold;" title="Dismiss">&times;</span>
+                            <h4 style="color: #d35400; margin: 0 0 10px 0;">⚠️ Low Stock Warning (${lowStock.length})</h4>
+                            <ul style="margin: 0; padding-left: 20px; color: #d35400; font-size: 14px;">
+                                ${lowStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is running low: <b>${i.quantity} left</b> (Reorder level: ${i.reorder_level})</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+
+                alertsContainer.innerHTML = alertHTML;
             }
+        }
 
             // I-display ang alerts
             alertsContainer.innerHTML = alertHTML;
@@ -151,6 +161,13 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "login.html";
         return;
     }
+
+    // ===== DISMISS ALERTS =====
+function dismissAlerts() {
+    alertsDismissed = true;
+    const alertsContainer = document.getElementById("alertsContainer");
+    if (alertsContainer) alertsContainer.innerHTML = "";
+}
 
     refreshDashboard();
     setInterval(refreshDashboard, 5000);
