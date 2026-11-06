@@ -1,128 +1,104 @@
-// ===== DISCREPANCY HANDLING - DAY 24 =====
-const API_DISCREPANCIES = `${window.API_BASE_URL}/api/discrepancies`;
+// ===== DISCREPANCIES PAGE - FULL WORKING CODE =====
 
-if (!isLoggedIn()) window.location.href = "login.html";
+const API_URL = `${window.API_BASE_URL}/api/verifications`;
 
-// ===== LOAD DISCREPANCIES =====
+// I-load ang data pagka-open ng page
+document.addEventListener("DOMContentLoaded", () => {
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
+        return;
+    }
+    loadDiscrepancies();
+});
+
 async function loadDiscrepancies() {
     const tbody = document.getElementById("discrepanciesTableBody");
-    try {
-        const res = await fetch(API_DISCREPANCIES, { headers: authHeaders() });
-        const result = await res.json();
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#666;">⏳ Loading data...</td></tr>`;
 
-        if (!result.success || result.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#999;">✅ No discrepancies found. All good!</td></tr>`;
+    try {
+        // Kunin lahat ng verifications (kasama na dito ang Matched at Discrepancy)
+        const response = await fetch(API_URL, {
+            headers: authHeaders()
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message);
+        }
+
+        // I-filter lang natin yung mga "Discrepancy"
+        const discrepancies = result.data.filter(v => v.status === "Discrepancy");
+
+        if (discrepancies.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#2e7d32;font-weight:bold;">✅ No discrepancies found. All good!</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = result.data.map(d => {
-            const date = new Date(d.created_at).toLocaleString();
-            const statusColors = {
-                "Pending Review": "#f39c12",
-                "Reviewed": "#3498db",
-                "Resolved": "#27ae60",
-                "Rejected": "#e74c3c"
-            };
-            const color = statusColors[d.status] || "#666";
-            const diffColor = d.difference < 0 ? "#e74c3c" : "#27ae60";
-
-            let actions = "—";
-            if (isAdmin()) {
-                if (d.status === "Pending Review") {
-                    actions = `
-                        <button onclick="reviewDiscrepancy(${d.id}, ${d.expected_qty}, ${d.actual_qty})" style="background:#3498db;">Review</button>
-                    `;
-                } else if (d.status === "Reviewed") {
-                    actions = `
-                        <button onclick="resolveDiscrepancy(${d.id})" style="background:#27ae60;">Resolve</button>
-                        <button onclick="rejectDiscrepancy(${d.id})" style="background:#e74c3c;">Reject</button>
-                    `;
-                }
-            }
-
+        // I-render sa table
+        tbody.innerHTML = discrepancies.map(v => {
+            const date = new Date(v.created_at).toLocaleString();
+            const difference = v.actual_qty - v.expected_qty;
+            
             return `
                 <tr>
-                    <td style="font-size:13px;color:#666;">${date}</td>
-                    <td><strong>${d.code}</strong><br><small>${d.item_name}</small></td>
-                    <td>${d.expected_qty} ${d.unit || 'pcs'}</td>
-                    <td>${d.actual_qty} ${d.unit || 'pcs'}</td>
-                    <td><span style="color:${diffColor};font-weight:700;">${d.difference > 0 ? '+' : ''}${d.difference}</span></td>
-                    <td><span style="padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;background:${color}22;color:${color};">${d.status}</span></td>
-                    <td>${actions}</td>
+                    <td style="font-size: 13px; color: #666;">${date}</td>
+                    <td>
+                        <strong>${v.code}</strong><br>
+                        <span style="font-size:12px; color:#555;">${v.name}</span>
+                    </td>
+                    <td>${v.expected_qty}</td>
+                    <td style="color: #c62828; font-weight: bold;">${v.actual_qty}</td>
+                    <td style="color: #c62828; font-weight: bold;">${difference}</td>
+                    <td>
+                        <span style="padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #c62828; background: #ffebee;">
+                            ⚠️ Discrepancy
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="showResolvePrompt(${v.id}, '${v.name}')" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Resolve</button>
+                    </td>
                 </tr>
             `;
         }).join("");
+
     } catch (error) {
-        console.error(error);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:red;">⚠️ Cannot load discrepancies</td></tr>`;
+        console.error("Error:", error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align:center;padding:20px;color:#c62828;">
+                    ❌ Cannot load discrepancies. Please check if the backend is awake and try refreshing.
+                </td>
+            </tr>
+        `;
     }
 }
 
-// ===== REVIEW DISCREPANCY =====
-async function reviewDiscrepancy(id, expected, actual) {
-    const diff = actual - expected;
-    const message = diff < 0 
-        ? `⚠️ Kulang ng ${Math.abs(diff)} items. Ano ang action?`
-        : `⚠️ Sobra ng ${diff} items. Ano ang action?`;
+// Function para sa Resolve button
+async function showResolvePrompt(id, itemName) {
+    const remarks = prompt(`Enter resolution remarks for ${itemName}:\n(e.g., "Item was found", "Reported missing")`);
     
-    const action = prompt(
-        `${message}\n\nOptions:\n- Adjust Quantity (i-update ang stock)\n- Report Missing (i-record as missing)\n- Report Damaged (i-record as damaged)\n- Other\n\nI-type yung action:`,
-        "Adjust Quantity"
-    );
-    
-    if (!action) return;
-
-    const remarks = prompt("Remarks (optional):") || "";
+    if (remarks === null) return; // I-cancel ni user
+    if (remarks.trim() === "") {
+        alert("⚠️ Remarks cannot be empty.");
+        return;
+    }
 
     try {
-        const res = await fetch(`${API_DISCREPANCIES}/${id}/review`, {
+        const response = await fetch(`${window.API_BASE_URL}/api/verifications/${id}/resolve`, {
             method: "PUT",
             headers: authHeaders(),
-            body: JSON.stringify({ action, remarks })
+            body: JSON.stringify({ remarks })
         });
-        const result = await res.json();
-        alert(result.message);
-        loadDiscrepancies();
+        const result = await response.json();
+
+        if (result.success) {
+            alert("✅ Discrepancy resolved!");
+            loadDiscrepancies(); // I-refresh yung table
+        } else {
+            alert("❌ " + result.message);
+        }
     } catch (error) {
-        alert("❌ Error reviewing discrepancy");
+        console.error("Resolve error:", error);
+        alert("⚠️ Cannot resolve at the moment.");
     }
 }
-
-// ===== RESOLVE DISCREPANCY =====
-async function resolveDiscrepancy(id) {
-    if (!confirm("⚠️ I-adjust yung item stock base sa actual count? Hindi na 'to ma-undo.")) return;
-
-    try {
-        const res = await fetch(`${API_DISCREPANCIES}/${id}/resolve`, {
-            method: "PUT",
-            headers: authHeaders()
-        });
-        const result = await res.json();
-        alert(result.message);
-        loadDiscrepancies();
-    } catch (error) {
-        alert("❌ Error resolving discrepancy");
-    }
-}
-
-// ===== REJECT DISCREPANCY =====
-async function rejectDiscrepancy(id) {
-    if (!confirm("Reject this discrepancy? Hindi mababago yung stock.")) return;
-
-    try {
-        const res = await fetch(`${API_DISCREPANCIES}/${id}/reject`, {
-            method: "PUT",
-            headers: authHeaders()
-        });
-        const result = await res.json();
-        alert(result.message);
-        loadDiscrepancies();
-    } catch (error) {
-        alert("❌ Error rejecting discrepancy");
-    }
-}
-
-// ===== INITIALIZE =====
-document.addEventListener("DOMContentLoaded", () => {
-    loadDiscrepancies();
-});

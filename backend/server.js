@@ -225,6 +225,24 @@ app.post("/api/verifications", authenticateToken, authorizeRoles("Admin", "Perso
     }
 });
 
+// ===== RESOLVE DISCREPANCY =====
+app.put("/api/verifications/:id/resolve", authenticateToken, authorizeRoles("Admin"), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { remarks } = req.body;
+
+        // Palitan natin yung status to "Resolved" at i-append yung remarks
+        await promisePool.query(
+            "UPDATE verifications SET status = 'Resolved', remarks = CONCAT(IFNULL(remarks, ''), ' | RESOLVED: ', ?) WHERE id = ?",
+            [remarks, id]
+        );
+
+        res.json({ success: true, message: "Discrepancy resolved successfully." });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ===== REQUESTS (ISSUE/RELEASE) =====
 app.get("/api/requests", authenticateToken, async (req, res) => {
     try {
