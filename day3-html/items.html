@@ -11,12 +11,15 @@
 </head>
 <body>
     <div class="app-layout">
-                <aside class="sidebar">
+        <aside class="sidebar">
+            <!-- Tamang Sidebar Header -->
             <div class="sidebar-header">
                 <img src="logo.png" alt="Compact II Logo" class="sidebar-logo" onerror="this.style.display='none'">
                 <h2>Inventory</h2>
                 <p>Compact II Gencon Inc.</p>
-            </div>="sidebar-nav">
+            </div>
+            
+            <nav class="sidebar-nav">
                 <a href="dashboard.html" data-role="admin-management">📊 Dashboard</a>
                 <a href="index.html">📝 Add Item</a>
                 <a href="items.html" class="active">📋 Item List</a>
@@ -38,8 +41,10 @@
             </header>
 
             <section class="content-card">
+                <!-- Header ng Item List at Search Bar -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0;">📋 All Items</h2>
+                    
                     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                         <div>
                             <input type="text" id="searchItem" onkeyup="filterItems()" placeholder="🔍 Search name or code..." style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 250px; font-size: 14px;">
@@ -51,6 +56,8 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Table -->
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; min-width: 800px;">
                         <thead>
@@ -64,15 +71,19 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsTableBody"></tbody>
+                        <tbody id="itemsTableBody">
+                            <tr><td colspan="7" style="text-align:center;padding:20px;">Loading...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </section>
         </main>
     </div>
+
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="items.js"></script>
+
     <script>
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
