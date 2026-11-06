@@ -12,15 +12,6 @@ body {
     line-height: 1.6;
 }
 
-/* ===== SECTIONS ===== */
-section {
-    background-color: white;
-    padding: 25px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 /* ===== FORM ===== */
 .form-grid {
     display: grid;
@@ -38,7 +29,9 @@ label {
 
 input[type="text"],
 input[type="number"],
-select {
+input[type="date"],
+select,
+textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -48,7 +41,8 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
     outline: none;
     border-color: #1e3a5f;
     box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.2);
@@ -111,24 +105,41 @@ tbody button {
     color: white;
     padding: 20px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
 }
 
+/* SIDEBAR LOGO & HEADER */
 .sidebar-header {
+    text-align: center;
     padding-bottom: 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     margin-bottom: 20px;
 }
 
+.sidebar-logo {
+    max-width: 90%;
+    height: auto;
+    max-height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    background-color: white;
+    padding: 8px;
+    border-radius: 8px;
+}
+
 .sidebar-header h2 {
-    font-size: 20px;
-    margin-bottom: 5px;
+    font-size: 18px;
+    margin: 0 0 5px 0;
 }
 
 .sidebar-header p {
     font-size: 12px;
     opacity: 0.8;
+    margin: 0;
 }
 
+/* SIDEBAR NAVIGATION */
 .sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -159,6 +170,7 @@ tbody button {
     padding: 25px;
     background-color: #f4f6f8;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .topbar {
@@ -239,20 +251,62 @@ tbody button {
     border-bottom: 2px solid #f0f0f0;
 }
 
-/* ===== MOBILE RESPONSIVE TABLE (Clean & Compact) ===== */
+/* =======================================================
+   ===== MOBILE RESPONSIVE DESIGN (Isang malinis na block) =====
+   ======================================================= */
 @media (max-width: 768px) {
-    /* Itago ang original table header */
-    table thead {
-        display: none;
+    /* 1. Gawing pababa (column) ang layout imbes na magkatabi */
+    .app-layout {
+        flex-direction: column;
     }
 
-    /* Gawing block (card) ang table at rows */
+    /* 2. Gawing 100% ang lapad ng sidebar sa phone */
+    .sidebar {
+        width: 100%;
+        padding: 15px;
+    }
+
+    /* 3. Gawing horizontal ang menu links sa phone para hindi masyadong mahaba */
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .sidebar-nav a {
+        flex: 1 1 40%; /* Dalawang column ang menu sa phone */
+        text-align: center;
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    /* 4. Ayusin ang padding ng main content at topbar */
+    .main-content {
+        padding: 15px;
+    }
+
+    .topbar {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+        padding: 15px;
+    }
+
+    /* 5. Gawing isang column lang ang form grid */
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* 6. TABLE TO CARDS DESIGN (Ang pinaka-importante) */
+    table thead {
+        display: none; /* Itago ang table header */
+    }
+
     table, table tbody, table tr {
         display: block;
         width: 100%;
     }
 
-    /* Design ng bawat card */
     table tr {
         background-color: #fff;
         margin-bottom: 15px;
@@ -262,10 +316,10 @@ tbody button {
         padding: 10px 15px;
     }
 
-    /* Design ng bawat cell (magkatabi ang label at value) */
+    /* I-display ang label sa kaliwa at value sa kanan */
     table td {
         display: flex;
-        justify-content: space-between; /* Label sa kaliwa, Value sa kanan */
+        justify-content: space-between; 
         align-items: center;
         padding: 10px 0;
         border-bottom: 1px solid #f0f0f0;
@@ -274,15 +328,13 @@ tbody button {
         color: #333;
     }
 
-    /* Walang border sa pinakababang cell */
     table td:last-child {
         border-bottom: none;
-        display: block; /* Para mag-stack ang buttons */
+        display: block; 
         text-align: center;
         padding-top: 15px;
     }
 
-    /* Ipakita ang Label sa kaliwa */
     table td::before {
         content: attr(data-label);
         font-weight: 600;
@@ -291,104 +343,17 @@ tbody button {
         padding-right: 15px;
     }
 
-    /* Design ng mga buttons sa mobile (hindi na pahabang block) */
-    table td[data-label="Actions"] button {
+    /* Ayusin ang mga buttons sa mobile (hindi na pahabang block) */
+    table td[data-label="Actions"] button,
+    table td button {
         display: inline-block;
         width: auto;
         padding: 8px 12px;
         margin: 5px 3px;
         font-size: 12px;
     }
-    
-    /* Konting adjust sa padding ng card */
+
     .content-card {
-        padding: 10px;
-    }
-}
-
-/* ===== SIDEBAR LOGO ===== */
-.sidebar-header {
-    text-align: center;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    margin-bottom: 20px;
-}
-
-.sidebar-logo {
-    max-width: 90%;
-    height: auto;
-    max-height: 70px;
-    object-fit: contain;
-    margin-bottom: 10px;
-    background-color: white; /* Para kitang-kita yung logo sa dark blue background */
-    padding: 8px;
-    border-radius: 8px;
-}
-
-.sidebar-header h2 {
-    font-size: 18px;
-    margin: 0 0 5px 0;
-}
-
-.sidebar-header p {
-    font-size: 12px;
-    opacity: 0.8;
-    margin: 0;
-}
-/* ===== MOBILE RESPONSIVE TABLE (Para maging cards sa phone) ===== */
-@media (max-width: 768px) {
-    /* Itago ang table headers sa phone */
-    table thead {
-        display: none;
-    }
-
-    /* Gawing block (card) ang bawat row */
-    table, table tbody, table tr, table td {
-        display: block;
-        width: 100%;
-    }
-
-    /* Design ng bawat card */
-    table tr {
-        background-color: #fff;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        padding: 10px;
-    }
-
-    /* Design ng bawat cell sa loob ng card */
-    table td {
-        text-align: right;
-        padding: 10px 10px 10px 50%; /* Bigyan ng space sa kaliwa para sa label */
-        border-bottom: 1px solid #eee;
-        position: relative;
-        border: none;
-    }
-
-    /* Walang border sa pinakababang cell */
-    table td:last-child {
-        border-bottom: none;
-    }
-
-    /* Gumawa ng Label sa kaliwa (e.g. "Item Name:") */
-    table td::before {
-        content: attr(data-label); /* Kukunin yung data-label attribute sa HTML */
-        position: absolute;
-        left: 10px;
-        width: 45%;
-        padding-right: 10px;
-        white-space: nowrap;
-        text-align: left;
-        font-weight: bold;
-        color: #1e3a5f;
-    }
-
-    /* Ayusin ang laki ng mga buttons sa phone */
-    table td button {
-        margin-top: 5px;
-        width: 100%;
-        padding: 8px;
+        padding: 15px;
     }
 }
