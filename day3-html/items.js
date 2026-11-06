@@ -2,7 +2,7 @@
 const API_URL = `${window.API_BASE_URL}/api/items`;
 const API_WAREHOUSES = `${window.API_BASE_URL}/api/warehouses`;
 
-let allItems = []; // Dito natin itatabi lahat ng items
+let allItems = []; 
 
 // ===== LOAD ITEMS =====
 async function loadItems() {
@@ -31,8 +31,8 @@ async function loadWarehousesForFilter() {
             const select = document.getElementById("filterSite");
             result.data.forEach(w => {
                 const opt = document.createElement("option");
-                opt.value = w.id; // Warehouse ID
-                opt.textContent = w.name; // E.g., "NDU- Cotabato", "CDO"
+                opt.value = w.id; 
+                opt.textContent = w.name; 
                 select.appendChild(opt);
             });
         }
@@ -46,21 +46,25 @@ function renderTable(items) {
     const tbody = document.getElementById("itemsTableBody");
     
     if (!items || items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">📭 No items found for this site.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">📭 No items found.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = items.map(item => `
         <tr>
             <td>${item.id}</td>
-            <td>${item.code}</td>
+            <td><strong>${item.code}</strong></td>
             <td>${item.name}</td>
             <td>${item.category}</td>
             <td>${item.quantity} ${item.unit || ''}</td>
-            <td>${item.condition}</td>
             <td>
-                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
-                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
+                <span style="padding: 4px 8px; border-radius: 4px; background: #e9ecef; font-size: 12px;">
+                    ${item.condition}
+                </span>
+            </td>
+            <td>
+                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60; padding: 5px 10px; font-size: 12px;">QR</button>
+                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad; padding: 5px 10px; font-size: 12px;">Barcode</button>
             </td>
         </tr>
     `).join("");
@@ -71,14 +75,14 @@ function filterItems() {
     const searchQuery = document.getElementById("searchItem").value.toLowerCase();
     const selectedSiteId = document.getElementById("filterSite").value;
     
-    let filteredItems = allItems; // Simulan sa lahat ng items
+    let filteredItems = allItems;
 
-    // 1. I-filter base sa napiling Site
+    // 1. Site Filter
     if (selectedSiteId !== "All") {
         filteredItems = filteredItems.filter(item => item.warehouse_id == selectedSiteId);
     }
 
-    // 2. I-filter base sa Search Input (Name o Code)
+    // 2. Search Filter
     if (searchQuery.trim() !== "") {
         filteredItems = filteredItems.filter(item => 
             item.name.toLowerCase().includes(searchQuery) || 
@@ -86,11 +90,10 @@ function filterItems() {
         );
     }
 
-    // I-render yung resulta
     renderTable(filteredItems);
 }
 
-// ===== SHOW QR & BARCODE (Existing code) =====
+// ===== SHOW QR =====
 async function showQRCode(id) {
     const response = await fetch(`${API_URL}/${id}/qrcode`, { headers: authHeaders() });
     const result = await response.json();
@@ -103,6 +106,7 @@ async function showQRCode(id) {
     }
 }
 
+// ===== SHOW BARCODE =====
 async function showBarcode(id) {
     const response = await fetch(`${API_URL}/${id}/barcode`, { headers: authHeaders() });
     const result = await response.json();
@@ -122,5 +126,5 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
     loadItems();
-    loadWarehousesForFilter(); // I-load yung mga sites sa dropdown
+    loadWarehousesForFilter(); 
 });
