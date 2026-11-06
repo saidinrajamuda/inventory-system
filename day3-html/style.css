@@ -251,9 +251,9 @@ tbody button {
     border-bottom: 2px solid #f0f0f0;
 }
 
-/* ===== MOBILE RESPONSIVE TABLE (Compact & Clean) ===== */
+/* ===== MOBILE RESPONSIVE TABLE (Ultra Compact) ===== */
 @media (max-width: 768px) {
-    /* 1. Gawing pababa (stack) ang layout */
+    /* 1. I-stack ang layout */
     .app-layout {
         flex-direction: column !important;
     }
@@ -267,58 +267,59 @@ tbody button {
         display: none;
     }
 
-    /* 3. Gawing block (card) ang table rows */
+    /* 3. Gawing block ang table rows */
     table, table tbody, table tr {
         display: block;
         width: 100%;
     }
 
-    /* 4. Design ng bawat card (paliitin natin) */
+    /* 4. Sobrang liit na card design */
     table tr {
         background-color: #fff;
-        margin-bottom: 10px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        padding: 8px 12px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 5px 10px; /* Paliitin ang space sa loob */
     }
 
-    /* 5. Design ng bawat cell (magkatabi ang label at value) */
+    /* 5. Magkatabi ang label at value, dikit lang */
     table td {
         display: flex;
-        justify-content: space-between; /* Label sa kaliwa, value sa kanan */
+        justify-content: space-between;
         align-items: center;
-        padding: 6px 0; /* Paliitin ang space */
-        border-bottom: 1px solid #f5f5f5;
-        font-size: 13px; /* Paliitin ang font */
-        text-align: right;
+        padding: 5px 0;
+        border-bottom: 1px dashed #eee; /* Manipis na border */
+        font-size: 13px; /* Masyadong maliit? Gawing 13px */
+        color: #333;
     }
 
-    /* 6. Ipakita ang Label sa kaliwa */
+    /* 6. Label sa kaliwa */
     table td::before {
         content: attr(data-label);
         font-weight: 600;
         color: #1e3a5f;
-        text-align: left;
-        padding-right: 10px;
+        font-size: 12px; /* Paliitin ang label */
+        margin-right: 10px;
     }
 
-    /* 7. Walang border sa pinakababang cell (Actions) */
+    /* 7. Actions cell (para sa buttons) */
     table td:last-child {
         border-bottom: none;
-        display: flex;
-        justify-content: center; /* Center ang buttons */
-        flex-wrap: wrap; /* Pumila kung hindi kasya */
-        gap: 5px; /* Space sa pagitan ng buttons */
-        padding-top: 10px;
+        display: block; /* Ibalik sa block para ma-center */
+        text-align: center;
+        padding-top: 5px;
     }
 
-    /* 8. Paliitin ang mga Buttons */
+    /* 8. Maliit na buttons na magkakatabi */
     table td[data-label="Actions"] button {
         display: inline-block;
         width: auto;
-        padding: 6px 12px;
-        margin: 0;
-        font-size: 11px; /* Masyadong maliit? Pwede 12px */
+        padding: 4px 8px; /* Sobrang liit na padding */
+        margin: 2px;
+        font-size: 11px; /* Paliitin ang font */
+        border-radius: 3px;
+        border: none;
+        color: white;
+        cursor: pointer;
     }
 }
