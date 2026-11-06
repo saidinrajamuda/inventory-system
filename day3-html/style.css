@@ -251,109 +251,74 @@ tbody button {
     border-bottom: 2px solid #f0f0f0;
 }
 
-/* =======================================================
-   ===== MOBILE RESPONSIVE DESIGN (Isang malinis na block) =====
-   ======================================================= */
+/* ===== MOBILE RESPONSIVE TABLE (Compact & Clean) ===== */
 @media (max-width: 768px) {
-    /* 1. Gawing pababa (column) ang layout imbes na magkatabi */
+    /* 1. Gawing pababa (stack) ang layout */
     .app-layout {
-        flex-direction: column;
+        flex-direction: column !important;
     }
-
-    /* 2. Gawing 100% ang lapad ng sidebar sa phone */
     .sidebar {
-        width: 100%;
-        padding: 15px;
+        width: 100% !important;
+        min-height: auto !important;
     }
 
-    /* 3. Gawing horizontal ang menu links sa phone para hindi masyadong mahaba */
-    .sidebar-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .sidebar-nav a {
-        flex: 1 1 40%; /* Dalawang column ang menu sa phone */
-        text-align: center;
-        font-size: 13px;
-        padding: 8px;
-    }
-
-    /* 4. Ayusin ang padding ng main content at topbar */
-    .main-content {
-        padding: 15px;
-    }
-
-    .topbar {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-        padding: 15px;
-    }
-
-    /* 5. Gawing isang column lang ang form grid */
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* 6. TABLE TO CARDS DESIGN (Ang pinaka-importante) */
+    /* 2. Itago ang table header */
     table thead {
-        display: none; /* Itago ang table header */
+        display: none;
     }
 
+    /* 3. Gawing block (card) ang table rows */
     table, table tbody, table tr {
         display: block;
         width: 100%;
     }
 
+    /* 4. Design ng bawat card (paliitin natin) */
     table tr {
         background-color: #fff;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        padding: 10px 15px;
+        margin-bottom: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    /* I-display ang label sa kaliwa at value sa kanan */
+    /* 5. Design ng bawat cell (magkatabi ang label at value) */
     table td {
         display: flex;
-        justify-content: space-between; 
+        justify-content: space-between; /* Label sa kaliwa, value sa kanan */
         align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 6px 0; /* Paliitin ang space */
+        border-bottom: 1px solid #f5f5f5;
+        font-size: 13px; /* Paliitin ang font */
         text-align: right;
-        font-size: 14px;
-        color: #333;
     }
 
-    table td:last-child {
-        border-bottom: none;
-        display: block; 
-        text-align: center;
-        padding-top: 15px;
-    }
-
+    /* 6. Ipakita ang Label sa kaliwa */
     table td::before {
         content: attr(data-label);
         font-weight: 600;
         color: #1e3a5f;
         text-align: left;
-        padding-right: 15px;
+        padding-right: 10px;
     }
 
-    /* Ayusin ang mga buttons sa mobile (hindi na pahabang block) */
-    table td[data-label="Actions"] button,
-    table td button {
+    /* 7. Walang border sa pinakababang cell (Actions) */
+    table td:last-child {
+        border-bottom: none;
+        display: flex;
+        justify-content: center; /* Center ang buttons */
+        flex-wrap: wrap; /* Pumila kung hindi kasya */
+        gap: 5px; /* Space sa pagitan ng buttons */
+        padding-top: 10px;
+    }
+
+    /* 8. Paliitin ang mga Buttons */
+    table td[data-label="Actions"] button {
         display: inline-block;
         width: auto;
-        padding: 8px 12px;
-        margin: 5px 3px;
-        font-size: 12px;
-    }
-
-    .content-card {
-        padding: 15px;
+        padding: 6px 12px;
+        margin: 0;
+        font-size: 11px; /* Masyadong maliit? Pwede 12px */
     }
 }
