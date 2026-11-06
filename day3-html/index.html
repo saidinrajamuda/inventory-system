@@ -43,86 +43,96 @@
 
             <section class="content-card" style="margin-bottom: 20px;">
                 <h2 id="formTitle">Add New Item</h2>
+                
+                <!-- BAGONG FORM GRID LAYOUT -->
                 <form>
-                    <div>
-                        <label for="itemName">Item Name:</label><br>
-                        <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
+                    <div class="form-grid">
+                        <div>
+                            <label for="itemName">Item Name:</label>
+                            <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
+                        </div>
+
+                        <div>
+                            <label for="uniqueCode">Unique Code:</label>
+                            <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
+                        </div>
+
+                        <div>
+                            <label for="category">Category:</label>
+                            <select id="category" name="category" required>
+                                <option value="">-- Select Category --</option>
+                                <option value="Equipment - Office">Equipment - Office</option>
+                                <option value="Equipment - Site">Equipment - Site</option>
+                                <option value="Tools - Hand Tools">Tools - Hand Tools</option>
+                                <option value="Tools - Power Tools">Tools - Power Tools</option>
+                                <option value="Machinery">Machinery</option>
+                                <option value="Materials">Materials</option>
+                                <option value="PPE (Personal Protective Equipment)">PPE (Personal Protective Equipment)</option>
+                                <option value="Furniture & Fixtures">Furniture & Fixtures</option>
+                                <option value="Vehicle">Vehicle</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="brand">Brand:</label>
+                            <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
+                        </div>
+
+                        <div>
+                            <label for="quantity">Quantity:</label>
+                            <input type="number" id="quantity" name="quantity" min="0" required>
+                        </div>
+
+                        <div>
+                            <label for="unit">Unit:</label>
+                            <select id="unit" name="unit">
+                                <option value="pcs">pcs (pieces)</option>
+                                <option value="box">box</option>
+                                <option value="kg">kg (kilograms)</option>
+                                <option value="m">m (meters)</option>
+                                <option value="L">L (liters)</option>
+                                <option value="set">set</option>
+                                <option value="unit">unit</option>
+                                <option value="length">length</option>
+                                <option value="gal">gal</option>
+                                <option value="tank">tank</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="reorderLevel">Reorder Level:</label>
+                            <input type="number" id="reorderLevel" name="reorderLevel" min="0" value="5" placeholder="e.g. 5">
+                        </div>
+
+                        <div>
+                            <label for="warehouse">Warehouse:</label>
+                            <select id="warehouse" name="warehouse">
+                                <option value="">-- Select Warehouse --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="location">Location:</label>
+                            <input type="text" id="location" name="location" placeholder="e.g. Shelf 1">
+                        </div>
+
+                        <div>
+                            <label for="condition">Condition:</label>
+                            <select id="condition" name="condition" required>
+                                <option value="">-- Select Condition --</option>
+                                <option value="Available">Available</option>
+                                <option value="In Use">In Use</option>
+                                <option value="Low Stock">Low Stock</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                                <option value="For Maintenance">For Maintenance</option>
+                            </select>
+                        </div>
                     </div>
-                    <br>
-                    <div>
-                        <label for="uniqueCode">Unique Code:</label><br>
-                        <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
+
+                    <div style="margin-top: 20px;">
+                        <button type="submit" id="submitBtn">Add Item</button>
+                        <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
                     </div>
-                    <br>
-                    <div>
-                        <label for="category">Category:</label><br>
-                        <select id="category" name="category" required>
-                            <option value="">-- Select Category --</option>
-                            <option value="Equipment - Office">Equipment - Office</option>
-                            <option value="Equipment - Site">Equipment - Site</option>
-                            <option value="Tools - Hand Tools">Tools - Hand Tools</option>
-                            <option value="Tools - Power Tools">Tools - Power Tools</option>
-                            <option value="Machinery">Machinery</option>
-                            <option value="Materials">Materials</option>
-                            <option value="PPE (Personal Protective Equipment)">PPE (Personal Protective Equipment)</option>
-                            <option value="Furniture & Fixtures">Furniture & Fixtures</option>
-                            <option value="Vehicle">Vehicle</option>
-                        </select>                                               
-                    </div>
-                    <br>
-                    <div>
-                        <label for="brand">Brand:</label><br>
-                        <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
-                    </div>
-                    <br>
-                    <div>
-                        <label for="quantity">Quantity:</label><br>
-                        <input type="number" id="quantity" name="quantity" min="0" required>
-                    </div>
-                    <br>
-                    <div>
-                        <label for="unit">Unit:</label><br>
-                        <select id="unit" name="unit">
-                            <option value="pcs">pcs (pieces)</option>
-                            <option value="box">box</option>
-                            <option value="kg">kg (kilograms)</option>
-                            <option value="m">m (meters)</option>
-                            <option value="L">L (liters)</option>
-                            <option value="set">set</option>
-                        </select>
-                    </div>
-                    <br>
-                    <div>
-                        <label for="reorderLevel">Reorder Level:</label><br>
-                        <input type="number" id="reorderLevel" name="reorderLevel" min="0" value="5" placeholder="e.g. 5">
-                    </div>
-                    <br>
-                    <div>
-                        <label for="warehouse">Warehouse:</label><br>
-                        <select id="warehouse" name="warehouse">
-                            <option value="">-- Select Warehouse --</option>
-                        </select>
-                    </div>
-                    <br>
-                    <div>
-                        <label for="location">Location:</label><br>
-                        <input type="text" id="location" name="location" placeholder="e.g. Shelf 1">
-                    </div>
-                    <br>
-                    <div>
-                        <label for="condition">Condition:</label><br>
-                        <select id="condition" name="condition" required>
-                            <option value="">-- Select Condition --</option>
-                            <option value="Available">Available</option>
-                            <option value="In Use">In Use</option>
-                            <option value="Low Stock">Low Stock</option>
-                            <option value="Out of Stock">Out of Stock</option>
-                            <option value="For Maintenance">For Maintenance</option>
-                        </select>
-                    </div>
-                    <br>
-                    <button type="submit" id="submitBtn">Add Item</button>
-                    <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
                 </form>
             </section>
 
@@ -131,7 +141,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0;">Item List</h2>
                     <div>
-                        <input type="text" id="searchInAdd" onkeyup="filterItemsInAdd()" placeholder="🔍 Search name or code..." style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 250px; font-size: 14px;">
+                        <input type="text" id="searchInAdd" onkeyup="filterItems()" placeholder="🔍 Search name or code..." style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 250px; font-size: 14px;">
                     </div>
                 </div>
                 

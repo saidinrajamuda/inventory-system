@@ -10,27 +10,6 @@ body {
     background-color: #f4f6f8;
     color: #333;
     line-height: 1.6;
-    padding: 20px;
-}
-
-/* ===== HEADER ===== */
-header {
-    background-color: #1e3a5f;
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-header h1 {
-    font-size: 28px;
-    margin-bottom: 5px;
-}
-
-header p {
-    font-size: 14px;
-    opacity: 0.9;
 }
 
 /* ===== SECTIONS ===== */
@@ -42,17 +21,11 @@ section {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-section h2 {
-    color: #1e3a5f;
-    font-size: 20px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #1e3a5f;
-    padding-bottom: 8px;
-}
-
 /* ===== FORM ===== */
-form div {
-    margin-bottom: 15px;
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
 label {
@@ -67,7 +40,6 @@ input[type="text"],
 input[type="number"],
 select {
     width: 100%;
-    max-width: 400px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -124,14 +96,6 @@ tbody button {
     padding: 5px 12px;
     font-size: 12px;
     margin-right: 5px;
-}
-
-/* ===== FOOTER ===== */
-footer {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-    font-size: 13px;
 }
 
 /* ===== APP LAYOUT (SIDEBAR + MAIN) ===== */
@@ -243,17 +207,10 @@ footer {
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card.warning {
-    border-left-color: #f39c12;
-}
+.stat-card.warning { border-left-color: #f39c12; }
+.stat-card.danger { border-left-color: #e74c3c; }
 
-.stat-card.danger {
-    border-left-color: #e74c3c;
-}
-
-.stat-icon {
-    font-size: 32px;
-}
+.stat-icon { font-size: 32px; }
 
 .stat-info h3 {
     font-size: 24px;
@@ -301,5 +258,9 @@ footer {
         flex: 1 1 auto;
         text-align: center;
         font-size: 12px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr; /* Magiging isang column sa mobile */
     }
 }
