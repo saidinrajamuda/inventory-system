@@ -239,29 +239,67 @@ tbody button {
     border-bottom: 2px solid #f0f0f0;
 }
 
-/* ===== RESPONSIVE (MOBILE) ===== */
+/* ===== MOBILE RESPONSIVE TABLE (Clean & Compact) ===== */
 @media (max-width: 768px) {
-    .app-layout {
-        flex-direction: column;
+    /* Itago ang header ng table */
+    table thead {
+        display: none;
     }
 
-    .sidebar {
+    /* Gawing block (card) ang bawat row */
+    table, table tbody, table tr, table td {
+        display: block;
         width: 100%;
     }
 
-    .sidebar-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
+    /* Design ng bawat card */
+    table tr {
+        background-color: #fff;
+        margin-bottom: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        padding: 10px 15px;
     }
 
-    .sidebar-nav a {
-        flex: 1 1 auto;
-        text-align: center;
-        font-size: 12px;
+    /* Design ng bawat cell (magkatabi ang label at value) */
+    table td {
+        display: flex;
+        justify-content: space-between; /* Label sa kaliwa, Value sa kanan */
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: right;
+        font-size: 14px;
     }
 
-    .form-grid {
-        grid-template-columns: 1fr; /* Magiging isang column sa mobile */
+    /* Walang border sa pinakababang cell */
+    table td:last-child {
+        border-bottom: none;
+        flex-direction: column; /* Gawing pababa ang buttons */
+        align-items: flex-end;
+    }
+
+    /* Gumawa ng Label sa kaliwa */
+    table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+        text-align: left;
+        margin-right: 15px;
+    }
+
+    /* Design para sa mga buttons sa mobile */
+    table td[data-label="Actions"] button {
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    /* Konting space sa pagitan ng search bar at table */
+    .content-card {
+        padding: 15px;
     }
 }
 /* ===== SIDEBAR LOGO ===== */

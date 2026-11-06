@@ -52,17 +52,17 @@ function renderTable(items) {
     }
 
     // 2. I-render ang table (may data-label para sa mobile design)
-    tbody.innerHTML = items.map(item => `
+        tbody.innerHTML = items.map(item => `
         <tr>
             <td data-label="ID">${item.id}</td>
-            <td data-label="Unique Code">${item.code}</td>
-            <td data-label="Item Name">${item.name}</td>
+            <td data-label="Code">${item.code}</td>
+            <td data-label="Name">${item.name}</td>
             <td data-label="Category">${item.category}</td>
-            <td data-label="Quantity">${item.quantity} ${item.unit || ''}</td>
+            <td data-label="Qty">${item.quantity} ${item.unit || ''}</td>
             <td data-label="Condition">${item.condition}</td>
             <td data-label="Actions">
-                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-right: 5px;">QR</button>
-                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Barcode</button>
+                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
+                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
             </td>
         </tr>
     `).join("");
