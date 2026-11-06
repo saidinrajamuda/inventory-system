@@ -128,3 +128,100 @@ document.addEventListener("DOMContentLoaded", () => {
     loadItems();
     loadWarehousesForFilter(); 
 });
+// ===== PRINT ITEM LIST (Corporate Style) =====
+function printItemList() {
+    const rows = document.querySelectorAll("#itemsTableBody tr");
+    if (rows.length === 0 || rows[0].innerText.includes("No items")) {
+        alert("⚠️ No data to print.");
+        return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    let tableHTML = "";
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length >= 6) {
+            tableHTML += `
+                <tr>
+                    <td>${cells[0].innerText}</td>
+                    <td>${cells[1].innerText}</td>
+                    <td>${cells[2].innerText}</td>
+                    <td>${cells[3].innerText}</td>
+                    <td style="text-align: center;">${cells[4].innerText}</td>
+                    <td style="text-align: center;">${cells[5].innerText}</td>
+                </tr>
+            `;
+        }
+    });
+
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Inventory Master List - Compact II</title>
+            <style>
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
+                .header-container { text-align: center; border-bottom: 3px double #1e3a5f; padding-bottom: 15px; margin-bottom: 20px; }
+                .logo { width: 100px; height: auto; margin-bottom: 10px; }
+                .company-info h1 { margin: 0; font-size: 22px; color: #1e3a5f; text-transform: uppercase; letter-spacing: 1px; }
+                .company-info p { margin: 3px 0; font-size: 12px; color: #555; }
+                .report-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+                .report-date { text-align: center; font-size: 12px; color: #666; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+                th { background-color: #1e3a5f; color: white; padding: 8px; text-align: left; border: 1px solid #1e3a5f; }
+                td { padding: 6px 8px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .signatures { display: flex; justify-content: space-between; margin-top: 50px; page-break-inside: avoid; }
+                .signature-box { text-align: center; width: 250px; }
+                .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 30px; }
+                .signature-name { font-weight: bold; font-size: 13px; margin: 0; text-transform: uppercase; }
+                .signature-title { font-size: 11px; margin: 0; color: #555; }
+                @media print { body { padding: 0; } .header-container { border-bottom: 3px double #1e3a5f; } }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <img src="logo.png" class="logo" onerror="this.style.display='none'">
+                <div class="company-info">
+                    <h1>COMPACT II GENCON INC.</h1>
+                    <p>1st Street, Don E. Sero, Rosary Heights 5, Cotabato City</p>
+                    <p>Web-Based Inventory Monitoring and Tracking System</p>
+                </div>
+            </div>
+            <div class="report-title">Inventory Master List</div>
+            <div class="report-date">Generated on: ${new Date().toLocaleString()}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Unique Code</th>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Qty</th>
+                        <th>Condition</th>
+                    </tr>
+                </thead>
+                <tbody>${tableHTML}</tbody>
+            </table>
+            <div class="signatures">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <p class="signature-name">Prepared By</p>
+                    <p class="signature-title">Authorized Personnel</p>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <p class="signature-name">RAUL S. LLANO</p>
+                    <p class="signature-title">VP for Operations</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+}
