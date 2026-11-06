@@ -80,14 +80,22 @@ function applyRoleBasedUI() {
     const user = getCurrentUser();
     if (!user) return;
 
+    // Admin only (Users page)
     document.querySelectorAll("[data-role='admin']").forEach(el => {
         el.style.display = isAdmin() ? "" : "none";
     });
 
+    // Admin + Personnel (Scan QR, Issue/Release)
     document.querySelectorAll("[data-role='admin-personnel']").forEach(el => {
         el.style.display = (isAdmin() || isPersonnel()) ? "" : "none";
     });
 
+    // Admin + Management (Dashboard, Reports, Discrepancies) - HINDI KASAMA SI PERSONNEL
+    document.querySelectorAll("[data-role='admin-management']").forEach(el => {
+        el.style.display = (isAdmin() || isManagement()) ? "" : "none";
+    });
+
+    // Not Management (Hidden for Management)
     document.querySelectorAll("[data-role='not-management']").forEach(el => {
         el.style.display = isManagement() ? "none" : "";
     });

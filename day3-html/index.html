@@ -4,16 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Item - Inventory System</title>
-    
-    <!-- PWA LINKS -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="theme-color" content="#1e3a5f">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -21,13 +17,13 @@
                 <p>Compact II Gencon Inc.</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="dashboard.html">📊 Dashboard</a>
+                <a href="dashboard.html" data-role="admin-management">📊 Dashboard</a>
                 <a href="index.html" class="active">📝 Add Item</a>
                 <a href="items.html">📋 Item List</a>
-                <a href="issue.html">📤 Issue/Release</a>
-                <a href="scan.html" data-role="not-management">📱 Scan QR</a>
-                <a href="discrepancies.html">⚠️ Discrepancies</a>
-                <a href="reports.html">📈 Reports</a>
+                <a href="issue.html" data-role="admin-personnel">📤 Issue/Release</a>
+                <a href="scan.html" data-role="admin-personnel">📱 Scan QR</a>
+                <a href="discrepancies.html" data-role="admin-management">⚠️ Discrepancies</a>
+                <a href="reports.html" data-role="admin-management">📈 Reports</a>
                 <a href="users.html" data-role="admin">👥 Users</a>
                 <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
             </nav>
@@ -41,22 +37,18 @@
                 </div>
             </header>
 
-            <section class="content-card" style="margin-bottom: 20px;">
+            <section class="content-card" style="margin-bottom: 20px;" data-role="admin">
                 <h2 id="formTitle">Add New Item</h2>
-                
-                <!-- BAGONG FORM GRID LAYOUT -->
                 <form>
                     <div class="form-grid">
                         <div>
                             <label for="itemName">Item Name:</label>
                             <input type="text" id="itemName" name="itemName" placeholder="e.g. Hammer" required>
                         </div>
-
                         <div>
                             <label for="uniqueCode">Unique Code:</label>
                             <input type="text" id="uniqueCode" name="uniqueCode" placeholder="e.g. TOOL-0001" required>
                         </div>
-
                         <div>
                             <label for="category">Category:</label>
                             <select id="category" name="category" required>
@@ -72,17 +64,14 @@
                                 <option value="Vehicle">Vehicle</option>
                             </select>
                         </div>
-
                         <div>
                             <label for="brand">Brand:</label>
                             <input type="text" id="brand" name="brand" placeholder="e.g. Bosch">
                         </div>
-
                         <div>
                             <label for="quantity">Quantity:</label>
                             <input type="number" id="quantity" name="quantity" min="0" required>
                         </div>
-
                         <div>
                             <label for="unit">Unit:</label>
                             <select id="unit" name="unit">
@@ -98,24 +87,20 @@
                                 <option value="tank">tank</option>
                             </select>
                         </div>
-
                         <div>
                             <label for="reorderLevel">Reorder Level:</label>
                             <input type="number" id="reorderLevel" name="reorderLevel" min="0" value="5" placeholder="e.g. 5">
                         </div>
-
                         <div>
                             <label for="warehouse">Warehouse:</label>
                             <select id="warehouse" name="warehouse">
                                 <option value="">-- Select Warehouse --</option>
                             </select>
                         </div>
-
                         <div>
                             <label for="location">Location:</label>
                             <input type="text" id="location" name="location" placeholder="e.g. Shelf 1">
                         </div>
-
                         <div>
                             <label for="condition">Condition:</label>
                             <select id="condition" name="condition" required>
@@ -128,7 +113,6 @@
                             </select>
                         </div>
                     </div>
-
                     <div style="margin-top: 20px;">
                         <button type="submit" id="submitBtn">Add Item</button>
                         <button type="button" id="cancelBtn" onclick="cancelEdit()" style="display: none; background-color: #999; margin-left: 8px;">Cancel</button>
@@ -137,14 +121,12 @@
             </section>
 
             <section class="content-card">
-                <!-- SEARCH BAR PARA SA ADD ITEM PAGE -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0;">Item List</h2>
                     <div>
                         <input type="text" id="searchInAdd" onkeyup="filterItems()" placeholder="🔍 Search name or code..." style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 250px; font-size: 14px;">
                     </div>
                 </div>
-                
                 <div style="overflow-x: auto;">
                     <table>
                         <thead>
@@ -158,26 +140,19 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsTableBody">
-                            <!-- Dinamiko itong laman via script.js -->
-                        </tbody>
+                        <tbody id="itemsTableBody"></tbody>
                     </table>
                 </div>
             </section>
         </main>
     </div>
-
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="script.js"></script>
-
-    <!-- PWA SERVICE WORKER -->
     <script>
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-            navigator.serviceWorker.register("service-worker.js")
-                .then(() => console.log("✅ SW registered"))
-                .catch((err) => console.warn("SW failed:", err));
+            navigator.serviceWorker.register("service-worker.js").catch(() => {});
         });
     }
     </script>
