@@ -40,8 +40,25 @@
             <section class="content-card">
                 <h2>📋 All Items</h2>
                             <section class="content-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0;">📋 All Items</h2>
+                    
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <!-- BAGONG DAGDAG: SEARCH BAR -->
+                        <div>
+                            <label for="searchItem" style="font-size: 14px; font-weight: 600; margin-right: 5px;">Search:</label>
+                            <input type="text" id="searchItem" onkeyup="filterItems()" placeholder="Search name or code..." style="padding: 8px; border: 1px solid #ccc; border-radius: 5px; width: 200px;">
+                        </div>
+
+                        <!-- SITE FILTER -->
+                        <div>
+                            <label for="filterSite" style="font-size: 14px; font-weight: 600; margin-right: 5px;">Site:</label>
+                            <select id="filterSite" onchange="filterItems()" style="padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                                <option value="All">All Sites</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                     
                     <!-- BAGONG DAGDAG: SITE FILTER -->
                     <div>

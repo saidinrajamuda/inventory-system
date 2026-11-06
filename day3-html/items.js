@@ -66,17 +66,28 @@ function renderTable(items) {
     `).join("");
 }
 
-// ===== FILTER LOGIC =====
-function filterItemsBySite() {
+// ===== FILTER LOGIC (Search + Site) =====
+function filterItems() {
+    const searchQuery = document.getElementById("searchItem").value.toLowerCase();
     const selectedSiteId = document.getElementById("filterSite").value;
     
-    if (selectedSiteId === "All") {
-        renderTable(allItems); // Ipakita lahat
-    } else {
-        // I-filter base sa warehouse_id
-        const filtered = allItems.filter(item => item.warehouse_id == selectedSiteId);
-        renderTable(filtered);
+    let filteredItems = allItems; // Simulan sa lahat ng items
+
+    // 1. I-filter base sa napiling Site
+    if (selectedSiteId !== "All") {
+        filteredItems = filteredItems.filter(item => item.warehouse_id == selectedSiteId);
     }
+
+    // 2. I-filter base sa Search Input (Name o Code)
+    if (searchQuery.trim() !== "") {
+        filteredItems = filteredItems.filter(item => 
+            item.name.toLowerCase().includes(searchQuery) || 
+            item.code.toLowerCase().includes(searchQuery)
+        );
+    }
+
+    // I-render yung resulta
+    renderTable(filteredItems);
 }
 
 // ===== SHOW QR & BARCODE (Existing code) =====
