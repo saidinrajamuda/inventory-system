@@ -43,60 +43,67 @@
             <section class="content-card" data-role="admin-personnel" style="margin-bottom: 20px;">
                 <h2>📝 New Request</h2>
                 <form id="requestForm">
-                    <div>
-                        <label for="reqItem">Select Item:</label><br>
-                        <select id="reqItem" required>
-                            <option value="">-- Select Item --</option>
-                        </select>
+                    <!-- Ginamit natin ang form-grid para maging 2 columns -->
+                    <div class="form-grid">
+                        <div>
+                            <label for="reqItem">Select Item:</label>
+                            <select id="reqItem" required>
+                                <option value="">-- Select Item --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="reqQty">Quantity:</label>
+                            <input type="number" id="reqQty" min="1" required>
+                        </div>
+
+                        <div>
+                            <label for="reqPurpose">Purpose:</label>
+                            <input type="text" id="reqPurpose" placeholder="e.g. Site construction">
+                        </div>
+
+                        <div>
+                            <label for="reqSite">Project / Site:</label>
+                            <input type="text" id="reqSite" placeholder="e.g. Project Alpha">
+                        </div>
+
+                        <div>
+                            <label for="reqBy">Requested By:</label>
+                            <input type="text" id="reqBy" required>
+                        </div>
+
+                        <div>
+                            <label for="reqNotes">Notes:</label>
+                            <textarea id="reqNotes" rows="2" placeholder="Additional details..."></textarea>
+                        </div>
                     </div>
-                    <br>
-                    <div>
-                        <label for="reqQty">Quantity:</label><br>
-                        <input type="number" id="reqQty" min="1" required>
+
+                    <div style="margin-top: 20px;">
+                        <button type="submit" style="background-color: #27ae60;">Submit Request</button>
                     </div>
-                    <br>
-                    <div>
-                        <label for="reqPurpose">Purpose:</label><br>
-                        <input type="text" id="reqPurpose" placeholder="e.g. Site construction">
-                    </div>
-                    <br>
-                    <div>
-                        <label for="reqSite">Project / Site:</label><br>
-                        <input type="text" id="reqSite" placeholder="e.g. Project Alpha">
-                    </div>
-                    <br>
-                    <div>
-                        <label for="reqBy">Requested By:</label><br>
-                        <input type="text" id="reqBy" required>
-                    </div>
-                    <br>
-                    <div>
-                        <label for="reqNotes">Notes:</label><br>
-                        <textarea id="reqNotes" rows="2"></textarea>
-                    </div>
-                    <br>
-                    <button type="submit">Submit Request</button>
                 </form>
             </section>
 
             <section class="content-card">
                 <h2>📋 Request History</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Requested By</th>
-                            <th>Purpose / Site</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="requestsTableBody">
-                        <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>
-                    </tbody>
-                </table>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Requested By</th>
+                                <th>Purpose / Site</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody">
+                            <tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </main>
     </div>
