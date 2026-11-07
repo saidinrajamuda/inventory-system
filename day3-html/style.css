@@ -554,29 +554,26 @@ tbody tr:hover {
 /* ===== SIDEBAR (Modern Dark Style) ===== */
 .sidebar {
     width: 260px;
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    color: #cbd5e1;
+    background-color: #0f172a; /* Solid dark navy blue */
+    color: #94a3b8;
     padding: 20px 15px;
     flex-shrink: 0;
-    
-    /* ITO ANG PINAKA-IMPORTANTENG FIX */
-    display: block !important; 
-    
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
     height: 100vh;
     position: sticky;
     top: 0;
     overflow-y: auto;
+    border-right: 1px solid #1e293b;
 }
 
 /* Sidebar Header (Logo area) */
 .sidebar-header {
     text-align: center;
-    padding: 15px 10px;
+    padding: 10px;
     margin-bottom: 25px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff; /* Puting box para kitang-kita logo */
+    border-radius: 8px;
 }
 
 .sidebar-logo {
@@ -594,33 +591,47 @@ tbody tr:hover {
 
 /* Sidebar Navigation */
 .sidebar-nav {
-    display: flex !important;
-    flex-direction: column !important; /* Pilitin na pababa (vertical) */
-    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 10px;
 }
 
 .sidebar-nav a {
     color: #94a3b8;
     text-decoration: none;
     padding: 12px 15px;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 500;
-    
-    /* Gawing block para kunin ang buong lapad ng menu */
-    display: block !important; 
-    
+    display: block; /* Balik sa block para isa-isa pababa */
     transition: all 0.2s ease;
     white-space: nowrap;
 }
 
+/* Hover effect */
 .sidebar-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #f8fafc;
+    background-color: #1e293b;
+    color: #ffffff;
 }
 
+/* Active Link */
 .sidebar-nav a.active {
-    background-color: #3b82f6;
-    color: white;
+    background-color: #3b82f6; /* Asul */
+    color: #ffffff;
     font-weight: 600;
+}
+
+/* Logout style */
+.sidebar-nav a[onclick="logout()"] {
+    color: #ef4444;
+    margin-top: 20px;
+    border-top: 1px solid #1e293b;
+    padding-top: 20px;
+    border-radius: 0;
+}
+
+.sidebar-nav a[onclick="logout()"]:hover {
+    background-color: transparent;
+    color: #f87171;
 }
