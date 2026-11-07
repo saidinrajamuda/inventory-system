@@ -1,4 +1,4 @@
-// ===== DASHBOARD - FIXED & STABLE =====
+// ===== DASHBOARD - ULTIMATE STABLE VERSION =====
 
 const API_ITEMS = `${window.API_BASE_URL}/api/items`;
 const API_VERIFICATIONS = `${window.API_BASE_URL}/api/verifications`;
@@ -21,7 +21,15 @@ async function loadStats() {
 
         const items = result.data;
 
-        // ===== ALERTS LOGIC =====
+        // === STAT CARDS ===
+        // Tinanggal natin yung "-" at "Loading" para siguradong may number
+        document.getElementById("totalItems").textContent = items.length;
+        const available = items.filter(i => i.condition === "Available").length;
+        document.getElementById("availableItems").textContent = available;
+        const lowStockCount = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level).length;
+        document.getElementById("lowStock").textContent = lowStockCount;
+
+        // === ALERTS LOGIC ===
         const alertsContainer = document.getElementById("alertsContainer");
         if (alertsContainer && !alertsDismissed) {
             let alertHTML = "";
@@ -56,14 +64,7 @@ async function loadStats() {
             alertsContainer.innerHTML = alertHTML;
         }
 
-        // === STAT CARDS ===
-        document.getElementById("totalItems").textContent = items.length;
-        const available = items.filter(i => i.condition === "Available").length;
-        document.getElementById("availableItems").textContent = available;
-        const lowStockCount = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level).length;
-        document.getElementById("lowStock").textContent = lowStockCount;
-
-        // === VERIFICATIONS ===
+        // === VERIFICATIONS (I-check kung may Discrepancy) ===
         const vResponse = await fetch(API_VERIFICATIONS, { headers: authHeaders() });
         const vResult = await vResponse.json();
         if (vResult.success) {
@@ -102,7 +103,7 @@ async function loadVerifications() {
             return;
         }
 
-        const recent = result.data.slice(0, 5); // Gawing 5 lang muna para malinis sa mobile
+        const recent = result.data.slice(0, 5);
 
         tbody.innerHTML = recent.map(v => {
             const date = new Date(v.created_at).toLocaleString();
@@ -138,23 +139,20 @@ async function loadVerifications() {
     }
 }
 
-// ===== REFRESH ALL =====
-function refreshDashboard() {
-    loadStats();
-    loadVerifications();
-}
-
 // ===== INITIALIZE =====
 document.addEventListener("DOMContentLoaded", () => {
+    // I-check agad kung naka-login
     if (!isLoggedIn()) {
         window.location.href = "login.html";
         return;
     }
 
-    refreshDashboard();
-    
-    // Mag-refresh every 30 seconds (para hindi mabigat sa server)
-    setInterval(refreshDashboard, 30000);
+    // I-update agad yung pangalan ng user sa topbar
+    if (typeof updateUserInfo === "function") updateUserInfo();
+
+    // Simulan mag-load ng data
+    loadStats();
+    loadVerifications();
 
     console.log("✅ Dashboard loaded successfully!");
 });

@@ -23,25 +23,9 @@ function isLoggedIn() {
     return !!getToken() && !!getCurrentUser();
 }
 
-// ===== REQUIRE LOGIN =====
-function requireLogin() {
-    if (!isLoggedIn()) {
-        window.location.href = "login.html";
-        return false;
-    }
-    return true;
-}
-
-// ===== REDIRECT IF LOGGED IN =====
-function redirectIfLoggedIn() {
-    if (isLoggedIn()) {
-        window.location.href = "dashboard.html";
-    }
-}
-
 // ===== LOGOUT =====
 function logout() {
-    if (!confirm("Are you sure you want to logout?")) return;
+    // Diretso logout, walang confirm para iwas hang
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "login.html";
@@ -80,22 +64,18 @@ function applyRoleBasedUI() {
     const user = getCurrentUser();
     if (!user) return;
 
-    // Admin only (Users page)
     document.querySelectorAll("[data-role='admin']").forEach(el => {
         el.style.display = isAdmin() ? "" : "none";
     });
 
-    // Admin + Personnel (Scan QR, Issue/Release)
     document.querySelectorAll("[data-role='admin-personnel']").forEach(el => {
         el.style.display = (isAdmin() || isPersonnel()) ? "" : "none";
     });
 
-    // Admin + Management (Dashboard, Reports, Discrepancies) - HINDI KASAMA SI PERSONNEL
     document.querySelectorAll("[data-role='admin-management']").forEach(el => {
         el.style.display = (isAdmin() || isManagement()) ? "" : "none";
     });
 
-    // Not Management (Hidden for Management)
     document.querySelectorAll("[data-role='not-management']").forEach(el => {
         el.style.display = isManagement() ? "none" : "";
     });
@@ -134,7 +114,6 @@ document.addEventListener("click", function(event) {
     const moreBtn = document.querySelector('.mobile-nav-item[onclick*="toggleMoreMenu"]');
     
     if (menu && menu.style.display === "flex") {
-        // Kung hindi sa loob ng menu at hindi sa more button clinick
         if (!menu.contains(event.target) && (!moreBtn || !moreBtn.contains(event.target))) {
             menu.style.display = "none";
         }
