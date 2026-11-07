@@ -116,3 +116,27 @@ document.addEventListener("DOMContentLoaded", () => {
     updateUserInfo();
     applyRoleBasedUI();
 });
+
+// Function para buksan/sarhan yung More Menu
+function toggleMoreMenu(event) {
+    if (event) event.preventDefault();
+    const menu = document.getElementById("moreMenu");
+    if (menu.style.display === "flex") {
+        menu.style.display = "none";
+    } else {
+        menu.style.display = "flex";
+    }
+}
+
+// Isara ang menu kapag nag-click sa labas
+document.addEventListener("click", function(event) {
+    const menu = document.getElementById("moreMenu");
+    const moreBtn = document.querySelector('.mobile-nav-item[onclick*="toggleMoreMenu"]');
+    
+    if (menu && menu.style.display === "flex") {
+        // Kung hindi sa loob ng menu at hindi sa more button clinick
+        if (!menu.contains(event.target) && (!moreBtn || !moreBtn.contains(event.target))) {
+            menu.style.display = "none";
+        }
+    }
+});
