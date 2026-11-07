@@ -188,8 +188,8 @@ function printItemList() {
 
                 /* Letterhead Image */
                 .letterhead {
-                    width: 80%; /* Pwede mong gawing 100% kung gusto mong mas malaki */
-                    max-width: 600px;
+                    width: 100%; 
+                    max-width: 400px; /* Ito ang magko-control para hindi lumaki nang sobra */
                     height: auto;
                 }
                 
