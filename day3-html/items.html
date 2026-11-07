@@ -41,24 +41,18 @@
             </header>
 
             <section class="content-card">
-                <!-- SEARCH, FILTER, AND BUTTONS SECTION -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0;">📋 All Items</h2>
                     
                     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                        <!-- SEARCH BAR -->
                         <div>
                             <input type="text" id="searchItem" onkeyup="filterItems()" placeholder="🔍 Search name or code..." style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; font-size: 14px;">
                         </div>
-
-                        <!-- SITE FILTER -->
                         <div>
                             <select id="filterSite" onchange="filterItems()" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px;">
                                 <option value="All">🌐 All Sites</option>
                             </select>
                         </div>
-
-                        <!-- PRINT & EXPORT BUTTONS -->
                         <div style="display: flex; gap: 5px;">
                             <button onclick="exportToExcel()" style="background-color: #27ae60; margin-right: 5px;">📥 Export to Excel</button>
                             <button onclick="printItemList()" style="background-color: #1e3a5f;">🖨️ Print</button>
@@ -66,7 +60,6 @@
                     </div>
                 </div>
 
-                <!-- TABLE -->
                 <div style="overflow-x: auto;">
                     <table style="width: 100%; min-width: 800px;">
                         <thead>
@@ -88,7 +81,8 @@
             </section>
         </main>
     </div>
-        <!-- MOBILE BOTTOM NAVIGATION -->
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
     <nav class="mobile-bottom-nav">
         <a href="dashboard.html" class="mobile-nav-item">
             <span class="icon">📊</span><span class="text">Home</span>
@@ -102,13 +96,12 @@
         <a href="issue.html" class="mobile-nav-item">
             <span class="icon">📤</span><span class="text">Issue</span>
         </a>
-        <!-- Bagong More Button -->
         <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMoreMenu(event)">
             <span class="icon">☰</span><span class="text">More</span>
         </a>
     </nav>
 
-    <!-- MORE MENU POPUP (Nakatago sa umpisa) -->
+    <!-- MORE MENU POPUP -->
     <div id="moreMenu" class="more-menu-popup">
         <a href="discrepancies.html">⚠️ Discrepancies</a>
         <a href="reports.html">📈 Reports</a>
@@ -116,3 +109,19 @@
         <a href="profile.html">👤 My Profile</a>
         <a href="#" onclick="logout()" style="color: #e74c3c; border-top: 1px solid #eee; margin-top: 5px; padding-top: 10px;">🚪 Logout</a>
     </div>
+
+    <!-- SCRIPTS: Siguraduhing kumpleto ito -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="items.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js").catch(() => {});
+        });
+    }
+    </script>
+</body>
+</html>
