@@ -1,5 +1,6 @@
-// ===== USER MANAGEMENT - DAY 18 =====
+// ===== USER MANAGEMENT - WITH ADD USER MODAL =====
 const API_USERS = `${window.API_BASE_URL}/api/users`;
+const API_REGISTER = `${window.API_BASE_URL}/api/auth/register`;
 
 // ===== REQUIRE ADMIN =====
 if (!isLoggedIn() || !isAdmin()) {
@@ -27,18 +28,25 @@ async function loadUsers() {
             return;
         }
 
-        tbody.innerHTML = result.data.map(u => `
-            <tr>
-                <td>${u.id}</td>
-                <td><strong>${u.username}</strong></td>
-                <td>${u.full_name || "-"}</td>
-                <td>${u.email || "-"}</td>
-                <td><span style="padding:4px 10px;background:#e3f2fd;color:#1976d2;border-radius:12px;font-size:12px;font-weight:600;">${u.role}</span></td>
-                <td>
-                    <button onclick="deleteUser(${u.id})" style="background-color:#e74c3c;">Delete</button>
-                </td>
-            </tr>
-        `).join("");
+        tbody.innerHTML = result.data.map(u => {
+            // Kulay ng role badge base sa role
+            let badgeColor = "#1976d2"; // Default blue (Personnel)
+            if (u.role === "Admin") badgeColor = "#e74c3c"; // Red
+            if (u.role === "Management") badgeColor = "#8e44ad"; // Purple
+
+            return `
+                <tr>
+                    <td>${u.id}</td>
+                    <td><strong>${u.username}</strong></td>
+                    <td>${u.full_name || "-"}</td>
+                    <td>${u.email || "-"}</td>
+                    <td><span style="padding:4px 10px; background:${badgeColor}22; color:${badgeColor}; border-radius:12px; font-size:12px; font-weight:600;">${u.role}</span></td>
+                    <td>
+                        <button onclick="deleteUser(${u.id})" style="background-color:#e74c3c;">Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
 
     } catch (error) {
         console.error("Error loading users:", error);
@@ -69,8 +77,66 @@ async function deleteUser(id) {
     }
 }
 
-// ===== INITIALIZE =====
+// ===== MODAL LOGIC =====
+function openAddUserModal() {
+    document.getElementById("addUserForm").reset();
+    document.getElementById("modalError").style.display = "none";
+    document.getElementById("addUserModal").style.display = "flex";
+}
+
+function closeAddUserModal() {
+    document.getElementById("addUserModal").style.display = "none";
+}
+
+// ===== SUBMIT NEW USER =====
 document.addEventListener("DOMContentLoaded", () => {
     loadUsers();
     console.log("✅ Users page loaded!");
+
+    const addUserForm = document.getElementById("addUserForm");
+    if (addUserForm) {
+        addUserForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById("saveUserBtn");
+            const errorEl = document.getElementById("modalError");
+            errorEl.style.display = "none";
+            btn.textContent = "Creating...";
+            btn.disabled = true;
+
+            const payload = {
+                full_name: document.getElementById("newFullName").value.trim(),
+                email: document.getElementById("newEmail").value.trim(),
+                username: document.getElementById("newUsername").value.trim(),
+                password: document.getElementById("newPassword").value,
+                role: document.getElementById("newRole").value
+            };
+
+            try {
+                // Kailangan nating i-attach ang Admin Token para payagan tayo ng backend
+                const response = await fetch(API_REGISTER, {
+                    method: "POST",
+                    headers: authHeaders(), // Dito natin isinasama ang token
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("✅ User created successfully!");
+                    closeAddUserModal();
+                    loadUsers(); // I-refresh ang table
+                } else {
+                    errorEl.textContent = result.message;
+                    errorEl.style.display = "block";
+                }
+            } catch (error) {
+                errorEl.textContent = "⚠️ Cannot connect to server.";
+                errorEl.style.display = "block";
+            } finally {
+                btn.textContent = "Create User";
+                btn.disabled = false;
+            }
+        });
+    }
 });
