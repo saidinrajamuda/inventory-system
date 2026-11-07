@@ -549,3 +549,68 @@ tbody tr:hover {
         font-size: 11px;
     }
 }
+/* ===== COLLAPSIBLE SIDEBAR MENUS ===== */
+.sidebar-nav details {
+    margin-bottom: 5px;
+}
+
+/* Yung clickable na menu (e.g., "Inventory") */
+.sidebar-nav summary {
+    color: #94a3b8;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Para mapunta yung arrow sa dulo */
+    list-style: none; /* Tinatanggal yung default na arrow ng browser */
+    transition: all 0.2s ease;
+}
+
+/* Itago ang default arrow ng browser */
+.sidebar-nav summary::-webkit-details-marker {
+    display: none;
+}
+
+.sidebar-nav summary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
+}
+
+/* Yung arrow icon (v) */
+.sidebar-nav summary::after {
+    content: '▼';
+    font-size: 8px;
+    transition: transform 0.2s ease;
+    opacity: 0.7;
+}
+
+/* Pagbukas, i-rotate yung arrow pataas */
+.sidebar-nav details[open] summary::after {
+    transform: rotate(180deg);
+}
+
+/* Yung mga sub-links sa loob (e.g., "Item List", "Add Item") */
+.sidebar-nav .sub-menu {
+    display: flex;
+    flex-direction: column;
+    padding-left: 15px; /* I-indent nang konti para malaman na sub-menu siya */
+    margin-top: 5px;
+    gap: 2px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1); /* Manipis na linya sa gilid */
+    margin-left: 15px;
+}
+
+.sidebar-nav .sub-menu a {
+    padding: 8px 15px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Yung active na link sa loob ng sub-menu */
+.sidebar-nav .sub-menu a.active {
+    background-color: #3b82f6;
+    color: white;
+}

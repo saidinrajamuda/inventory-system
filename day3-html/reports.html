@@ -64,18 +64,42 @@
                 <h2>Inventory</h2>
                 <p>Compact II Gencon Inc.</p>
             </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard.html" data-role="admin-management">📊 Dashboard</a>
-                <a href="index.html">📝 Add Item</a>
-                <a href="items.html">📋 Item List</a>
-                <a href="issue.html" data-role="admin-personnel">📤 Issue/Release</a>
-                <a href="scan.html" data-role="admin-personnel">📱 Scan QR</a>
-                <a href="discrepancies.html" data-role="admin-management">⚠️ Discrepancies</a>
-                <a href="reports.html" class="active" data-role="admin-management">📈 Reports</a>
-                <a href="users.html" data-role="admin">👥 Users</a>
-                <a href="profile.html">👤 My Profile</a>
-                <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
-            </nav>
+           <nav class="sidebar-nav">
+    <!-- Dashboard (Walang dropdown, deretso) -->
+    <a href="dashboard.html" data-role="admin-management" class="active">📊 Dashboard</a>
+
+    <!-- INVENTORY DROPDOWN -->
+    <details open> <!-- Nakabukas agad by default -->
+        <summary>📦 Inventory</summary>
+        <div class="sub-menu">
+            <a href="items.html">📋 Item List</a>
+            <a href="index.html">📝 Add Item</a>
+            <a href="issue.html" data-role="admin-personnel">📤 Issue/Release</a>
+            <a href="scan.html" data-role="admin-personnel">📱 Scan QR</a>
+        </div>
+    </details>
+
+    <!-- REPORTS DROPDOWN -->
+    <details open>
+        <summary>📈 Reports</summary>
+        <div class="sub-menu">
+            <a href="discrepancies.html" data-role="admin-management">⚠️ Discrepancies</a>
+            <a href="reports.html" data-role="admin-management">📊 View Reports</a>
+        </div>
+    </details>
+
+    <!-- SYSTEM DROPDOWN -->
+    <details>
+        <summary>⚙️ System</summary>
+        <div class="sub-menu">
+            <a href="users.html" data-role="admin">👥 Users</a>
+            <a href="profile.html">👤 My Profile</a>
+        </div>
+    </details>
+
+    <!-- Logout (Deretso) -->
+    <a href="#" onclick="logout()" class="logout-link" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">🚪 Logout</a>
+</nav>
         </aside>
 
         <main class="main-content">
