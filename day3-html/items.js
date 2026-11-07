@@ -51,17 +51,16 @@ function renderTable(items) {
     }
 
     tbody.innerHTML = items.map(item => {
-        // Logic para sa kulay
-        let qtyColor = "#333"; // Default black
+        let qtyColor = "#333";
         let qtyBg = "transparent";
         let statusLabel = "";
 
         if (item.quantity === 0) {
-            qtyColor = "#c62828"; // Red
+            qtyColor = "#c62828";
             qtyBg = "#ffebee";
             statusLabel = " (Out)";
         } else if (item.quantity <= item.reorder_level) {
-            qtyColor = "#d35400"; // Orange
+            qtyColor = "#d35400";
             qtyBg = "#fff3e0";
             statusLabel = " (Low)";
         }
@@ -91,12 +90,10 @@ function filterItems() {
     
     let filteredItems = allItems;
 
-    // 1. Site Filter
     if (selectedSiteId !== "All") {
         filteredItems = filteredItems.filter(item => item.warehouse_id == selectedSiteId);
     }
 
-    // 2. Search Filter
     if (searchQuery.trim() !== "") {
         filteredItems = filteredItems.filter(item => 
             item.name.toLowerCase().includes(searchQuery) || 
@@ -179,34 +176,19 @@ function printItemList() {
             <title>Inventory Master List - Compact II</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 20px; color: #333; font-size: 12px; }
-                
-                /* Header Image Container */
-                .header-image-container { 
-                    text-align: center; 
-                    margin-bottom: 20px; 
-                }
-
-                /* Letterhead Image */
-                .letterhead {
-                    width: 100%; 
-                    max-width: 400px; /* Ito ang magko-control para hindi lumaki nang sobra */
-                    height: auto;
-                }
-                
+                .header-image-container { text-align: center; margin-bottom: 20px; }
+                .letterhead { width: 100%; max-width: 400px; height: auto; }
                 .report-title { text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px; margin-bottom: 5px; text-transform: uppercase; }
                 .report-date { text-align: center; font-size: 12px; margin-bottom: 20px; color: #555; }
-                
                 table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 12px; }
                 th { background-color: #1e3a5f; color: white; padding: 8px; border: 1px solid #000; text-align: left; }
                 td { padding: 6px 8px; border: 1px solid #000; }
-                
                 .signatures { display: flex; justify-content: space-between; margin-top: 40px; page-break-inside: avoid; }
                 .signature-box { text-align: center; width: 250px; }
                 .signature-title { font-size: 11px; margin-bottom: 30px; }
                 .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 20px; }
                 .signature-name { font-weight: bold; font-size: 12px; margin: 0; text-transform: uppercase; }
                 .signature-role { font-size: 11px; margin: 0; }
-                
                 @media print { 
                     body { padding: 0; }
                     .header-image-container { margin-bottom: 10px; }
@@ -215,9 +197,8 @@ function printItemList() {
             </style>
         </head>
         <body>
-            <!-- Dito natin ilalagay yung Image ng Letterhead -->
             <div class="header-image-container">
-                <img src="letterhead.png" class="letterhead" onerror="this.style.display='none'">
+                <img src="sidebar-logo.png" class="letterhead" onerror="this.style.display='none'">
             </div>
             
             <div class="report-title">INVENTORY MASTER LIST</div>
@@ -277,45 +258,105 @@ function printItemList() {
         printWindow.close();
     }, 500);
 }
-// ===== EXPORT ITEMS TO CSV (EXCEL) =====
-function exportItemsToCSV() {
+
+// ===== EXPORT TO REAL EXCEL (.xlsx) WITH LOGO =====
+async function exportToExcel() {
     if (!allItems || allItems.length === 0) {
         alert("⚠️ No items to export.");
         return;
     }
 
-    // Headers ng Excel file
-    const headers = ["ID", "Unique Code", "Item Name", "Category", "Quantity", "Unit", "Condition", "Location", "Warehouse"];
+    try {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Inventory');
 
-    // Kunin yung data
-    const rows = allItems.map(item => [
-        item.id,
-        item.code,
-        item.name,
-        item.category,
-        item.quantity,
-        item.unit || "pcs",
-        item.condition,
-        item.location || "",
-        item.warehouse_name || ""
-    ]);
+        worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1 };
 
-    // I-convert sa CSV format
-    const csvContent = [headers, ...rows]
-        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-        .join("\n");
+        // Isama ang Logo
+        const logoResponse = await fetch('sidebar-logo.png');
+        const logoBuffer = await logoResponse.arrayBuffer();
+        const logoId = workbook.addImage({
+            buffer: logoBuffer,
+            extension: 'png',
+        });
 
-    // I-download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
+        // I-position ang logo sa gitna
+        worksheet.addImage(logoId, {
+            tl: { col: 0.5, row: 0 },
+            ext: { width: 300, height: 90 }
+        });
 
-    const today = new Date().toISOString().split("T")[0];
-    link.setAttribute("href", url);
-    link.setAttribute("download", `inventory-master-list-${today}.csv`);
-    link.style.visibility = "hidden";
+        // Space para sa logo
+        for (let i = 0; i < 6; i++) {
+            worksheet.addRow([]);
+        }
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        // Title
+        const titleRow = worksheet.addRow(["INVENTORY MASTER LIST"]);
+        titleRow.font = { size: 16, bold: true };
+        titleRow.alignment = { horizontal: 'center' };
+        worksheet.mergeCells(`A${titleRow.number}:F${titleRow.number}`);
+
+        // Date
+        const dateRow = worksheet.addRow([`AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
+        dateRow.alignment = { horizontal: 'center' };
+        worksheet.mergeCells(`A${dateRow.number}:F${dateRow.number}`);
+        
+        worksheet.addRow([]);
+
+        // Table Headers
+        const headerRow = worksheet.addRow(["NO.", "PRODUCT CODE", "NAME / DESCRIPTION", "CLASSIFICATION", "QTY", "UNIT"]);
+        
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.border = {
+                top: { style: 'thin' }, left: { style: 'thin' },
+                bottom: { style: 'thin' }, right: { style: 'thin' }
+            };
+        });
+
+        // Data Rows
+        allItems.forEach((item, index) => {
+            const row = worksheet.addRow([
+                index + 1,
+                item.code,
+                item.name,
+                item.category,
+                item.quantity,
+                item.unit || 'pcs'
+            ]);
+
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin' }, left: { style: 'thin' },
+                    bottom: { style: 'thin' }, right: { style: 'thin' }
+                };
+                if(cell.col === 1 || cell.col === 5 || cell.col === 6) {
+                    cell.alignment = { horizontal: 'center' };
+                }
+            });
+        });
+
+        // Auto-fit Column Widths
+        worksheet.columns.forEach(column => {
+            column.width = 20;
+        });
+        worksheet.getColumn(1).width = 8;
+        worksheet.getColumn(5).width = 10;
+        worksheet.getColumn(6).width = 10;
+
+        // I-download ang file
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `CompactII_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.click();
+
+    } catch (error) {
+        console.error("Excel Export Error:", error);
+        alert("⚠️ Cannot generate Excel file. Check if 'sidebar-logo.png' is in the same folder.");
+    }
 }
