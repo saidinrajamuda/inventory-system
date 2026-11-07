@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadWarehousesForFilter(); 
 });
 
-// ===== PRINT ITEM LIST (Corporate Style) =====
+// ===== PRINT ITEM LIST (Corporate Excel Style) =====
 function printItemList() {
     const rows = document.querySelectorAll("#itemsTableBody tr");
     if (rows.length === 0 || rows[0].innerText.includes("No items")) {
@@ -151,15 +151,21 @@ function printItemList() {
         return;
     }
 
+    // Kunin ang kasalukuyang naka-login para sa "Prepared By"
+    const currentUser = getCurrentUser();
+    const preparedBy = currentUser && currentUser.full_name ? currentUser.full_name : "Authorized Personnel";
+
     const printWindow = window.open('', '_blank');
     let tableHTML = "";
     
-    rows.forEach(row => {
+    // I-loop ang mga items
+    rows.forEach((row, index) => {
         const cells = row.querySelectorAll("td");
+        // Siguraduhing tama ang bilang ng cells (ID, Code, Name, Category, Qty, Condition)
         if (cells.length >= 6) {
             tableHTML += `
                 <tr>
-                    <td>${cells[0].innerText}</td>
+                    <td style="text-align: center;">${index + 1}</td>
                     <td>${cells[1].innerText}</td>
                     <td>${cells[2].innerText}</td>
                     <td>${cells[3].innerText}</td>
@@ -175,64 +181,102 @@ function printItemList() {
         <head>
             <title>Inventory Master List - Compact II</title>
             <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
-                .header-container { text-align: center; border-bottom: 3px double #1e3a5f; padding-bottom: 15px; margin-bottom: 20px; }
-                .logo { width: 100px; height: auto; margin-bottom: 10px; }
-                .company-info h1 { margin: 0; font-size: 22px; color: #1e3a5f; text-transform: uppercase; letter-spacing: 1px; }
-                .company-info p { margin: 3px 0; font-size: 12px; color: #555; }
-                .report-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
-                .report-date { text-align: center; font-size: 12px; color: #666; margin-bottom: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-                th { background-color: #1e3a5f; color: white; padding: 8px; text-align: left; border: 1px solid #1e3a5f; }
-                td { padding: 6px 8px; border: 1px solid #ddd; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .signatures { display: flex; justify-content: space-between; margin-top: 50px; page-break-inside: avoid; }
+                body { font-family: Arial, sans-serif; padding: 20px; color: #333; font-size: 12px; }
+                
+                /* Header Layout */
+                .header-container { display: flex; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+                .logo { width: 100px; height: 100px; object-fit: contain; margin-right: 20px; }
+                .company-info { text-align: center; flex-grow: 1; }
+                .company-info h1 { margin: 0; font-size: 24px; color: #c00000; font-style: italic; letter-spacing: 1px; }
+                .company-info h2 { margin: 0; font-size: 16px; color: #1e3a5f; }
+                .company-info p { margin: 2px 0; font-size: 11px; }
+                
+                /* Report Title */
+                .report-title { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+                .report-date { text-align: center; font-size: 12px; margin-bottom: 20px; }
+                
+                /* Table */
+                table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 12px; }
+                th { background-color: #1e3a5f; color: white; padding: 8px; border: 1px solid #000; text-align: left; }
+                td { padding: 6px 8px; border: 1px solid #000; }
+                
+                /* Signatures */
+                .signatures { display: flex; justify-content: space-between; margin-top: 40px; page-break-inside: avoid; }
                 .signature-box { text-align: center; width: 250px; }
-                .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 30px; }
-                .signature-name { font-weight: bold; font-size: 13px; margin: 0; text-transform: uppercase; }
-                .signature-title { font-size: 11px; margin: 0; color: #555; }
-                @media print { body { padding: 0; } .header-container { border-bottom: 3px double #1e3a5f; } }
+                .signature-title { font-size: 11px; margin-bottom: 30px; }
+                .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 20px; }
+                .signature-name { font-weight: bold; font-size: 12px; margin: 0; text-transform: uppercase; }
+                .signature-role { font-size: 11px; margin: 0; }
+                
+                @media print { 
+                    body { padding: 0; } 
+                    @page { margin: 15mm; }
+                }
             </style>
         </head>
         <body>
             <div class="header-container">
                 <img src="logo.png" class="logo" onerror="this.style.display='none'">
                 <div class="company-info">
-                    <h1>COMPACT II GENCON INC.</h1>
-                    <p>1st Street, Don E. Sero, Rosary Heights 5, Cotabato City</p>
-                    <p>Web-Based Inventory Monitoring and Tracking System</p>
+                    <h1>COMPACT II</h1>
+                    <h2>GENCON, INCORPORATED</h2>
+                    <p>GENERAL CONTRACTOR</p>
+                    <p>1st Street Don E. Sero, Barangay Rosary Heights 5, Cotabato City 9600</p>
+                    <p>Telephone No. (064) 421-7978 | Cellphone No. 0975-220-2131</p>
+                    <p>E-mail add.: compact.gencon@yahoo.com</p>
                 </div>
             </div>
-            <div class="report-title">Inventory Master List</div>
-            <div class="report-date">Generated on: ${new Date().toLocaleString()}</div>
+            
+            <div class="report-title">INVENTORY MASTER LIST</div>
+            <div class="report-date">AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+            
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Unique Code</th>
-                        <th>Item Name</th>
-                        <th>Category</th>
-                        <th>Qty</th>
-                        <th>Condition</th>
+                        <th style="width: 5%; text-align: center;">NO.</th>
+                        <th style="width: 20%;">PRODUCT CODE</th>
+                        <th style="width: 30%;">NAME / DESCRIPTION</th>
+                        <th style="width: 20%;">CLASSIFICATION</th>
+                        <th style="width: 10%; text-align: center;">QTY</th>
+                        <th style="width: 15%; text-align: center;">UNIT</th>
                     </tr>
                 </thead>
                 <tbody>${tableHTML}</tbody>
             </table>
+            
             <div class="signatures">
                 <div class="signature-box">
+                    <p class="signature-title">Prepared by:</p>
                     <div class="signature-line"></div>
-                    <p class="signature-name">Prepared By</p>
-                    <p class="signature-title">Authorized Personnel</p>
+                    <p class="signature-name">${preparedBy}</p>
+                    <p class="signature-role">Inventory Staff</p>
                 </div>
                 <div class="signature-box">
+                    <p class="signature-title">Noted by:</p>
                     <div class="signature-line"></div>
                     <p class="signature-name">RAUL S. LLANO</p>
-                    <p class="signature-title">VP for Operations</p>
+                    <p class="signature-role">VP for Operations</p>
+                </div>
+            </div>
+
+            <div class="signatures" style="margin-top: 30px;">
+                <div class="signature-box">
+                    <p class="signature-title">Checked by:</p>
+                    <div class="signature-line"></div>
+                    <p class="signature-name">JAIME O. BUENBRAZO</p>
+                    <p class="signature-role">President</p>
+                </div>
+                <div class="signature-box">
+                    <p class="signature-title">Noted by:</p>
+                    <div class="signature-line"></div>
+                    <p class="signature-name">JEFFREY O. NACIONAL</p>
+                    <p class="signature-role">Treasurer</p>
                 </div>
             </div>
         </body>
         </html>
     `);
+    
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => {
