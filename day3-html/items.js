@@ -240,3 +240,45 @@ function printItemList() {
         printWindow.close();
     }, 500);
 }
+// ===== EXPORT ITEMS TO CSV (EXCEL) =====
+function exportItemsToCSV() {
+    if (!allItems || allItems.length === 0) {
+        alert("⚠️ No items to export.");
+        return;
+    }
+
+    // Headers ng Excel file
+    const headers = ["ID", "Unique Code", "Item Name", "Category", "Quantity", "Unit", "Condition", "Location", "Warehouse"];
+
+    // Kunin yung data
+    const rows = allItems.map(item => [
+        item.id,
+        item.code,
+        item.name,
+        item.category,
+        item.quantity,
+        item.unit || "pcs",
+        item.condition,
+        item.location || "",
+        item.warehouse_name || ""
+    ]);
+
+    // I-convert sa CSV format
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+    // I-download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    const today = new Date().toISOString().split("T")[0];
+    link.setAttribute("href", url);
+    link.setAttribute("download", `inventory-master-list-${today}.csv`);
+    link.style.visibility = "hidden";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}

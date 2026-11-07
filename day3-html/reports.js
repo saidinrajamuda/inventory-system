@@ -138,7 +138,7 @@ function resetFilters() {
     updateSummary();
 }
 
-// ===== EXPORT TO CSV =====
+// ===== EXPORT TO CSV (Excel Ready) =====
 function exportToCSV() {
     const data = window.currentReportData || [];
 
@@ -147,7 +147,7 @@ function exportToCSV() {
         return;
     }
 
-    const headers = ["Date", "Item Code", "Item Name", "Expected Qty", "Actual Qty", "Status", "Remarks", "Verified By"];
+    const headers = ["Date", "Item Code", "Item Name", "Expected", "Actual", "Status", "Remarks", "Verified By"];
 
     const rows = data.map(v => [
         new Date(v.created_at).toLocaleString(),
