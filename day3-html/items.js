@@ -41,7 +41,7 @@ async function loadWarehousesForFilter() {
     }
 }
 
-// ===== RENDER TABLE =====
+// ===== RENDER TABLE WITH COLOR CODING =====
 function renderTable(items) {
     const tbody = document.getElementById("itemsTableBody");
 
@@ -50,20 +50,38 @@ function renderTable(items) {
         return;
     }
 
-        tbody.innerHTML = items.map(item => `
+    tbody.innerHTML = items.map(item => {
+        // Logic para sa kulay
+        let qtyColor = "#333"; // Default black
+        let qtyBg = "transparent";
+        let statusLabel = "";
+
+        if (item.quantity === 0) {
+            qtyColor = "#c62828"; // Red
+            qtyBg = "#ffebee";
+            statusLabel = " (Out)";
+        } else if (item.quantity <= item.reorder_level) {
+            qtyColor = "#d35400"; // Orange
+            qtyBg = "#fff3e0";
+            statusLabel = " (Low)";
+        }
+
+        return `
         <tr>
             <td data-label="ID">${item.id}</td>
             <td data-label="Code">${item.code}</td>
             <td data-label="Name">${item.name}</td>
             <td data-label="Category">${item.category}</td>
-            <td data-label="Qty">${item.quantity} ${item.unit || ''}</td>
+            <td data-label="Qty" style="color: ${qtyColor}; font-weight: bold; background: ${qtyBg};">
+                ${item.quantity} ${item.unit || ''} ${statusLabel}
+            </td>
             <td data-label="Condition">${item.condition}</td>
             <td data-label="Actions">
                 <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
                 <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
             </td>
         </tr>
-    `).join("");
+    `}).join("");
 }
 
 // ===== FILTER LOGIC (Search + Site) =====
