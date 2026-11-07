@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Inventory System</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="theme-color" content="#1e3a5f">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-layout">
-                <aside class="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-header">
                 <img src="sidebar-logo.png" alt="Compact II Letterhead" class="sidebar-logo" onerror="this.style.display='none'">
-                <h2>Inventory</h2>
-                <p>Compact II Gencon Inc.</p>
             </div>
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="active" data-role="admin-management">📊 Dashboard</a>
@@ -27,7 +24,8 @@
                 <a href="reports.html" data-role="admin-management">📈 Reports</a>
                 <a href="users.html" data-role="admin">👥 Users</a>
                 <a href="profile.html">👤 My Profile</a>
-                <a href="#" onclick="logout()">🚪 Logout</a>
+                <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
+            </nav>
         </aside>
 
         <main class="main-content">
@@ -95,7 +93,7 @@
         </main>
     </div>
 
-        <!-- MOBILE BOTTOM NAVIGATION -->
+    <!-- MOBILE BOTTOM NAVIGATION -->
     <nav class="mobile-bottom-nav">
         <a href="dashboard.html" class="mobile-nav-item">
             <span class="icon">📊</span><span class="text">Home</span>
@@ -109,13 +107,12 @@
         <a href="issue.html" class="mobile-nav-item">
             <span class="icon">📤</span><span class="text">Issue</span>
         </a>
-        <!-- Bagong More Button -->
         <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMoreMenu(event)">
             <span class="icon">☰</span><span class="text">More</span>
         </a>
     </nav>
 
-    <!-- MORE MENU POPUP (Nakatago sa umpisa) -->
+    <!-- MORE MENU POPUP -->
     <div id="moreMenu" class="more-menu-popup">
         <a href="discrepancies.html">⚠️ Discrepancies</a>
         <a href="reports.html">📈 Reports</a>
@@ -123,3 +120,39 @@
         <a href="profile.html">👤 My Profile</a>
         <a href="#" onclick="logout()" style="color: #e74c3c; border-top: 1px solid #eee; margin-top: 5px; padding-top: 10px;">🚪 Logout</a>
     </div>
+
+    <!-- ITO YUNG MGA NAWALANG SCRIPTS NA DAPAT NANDIYAN -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="dashboard.js"></script>
+    <script>
+        // Script para sa More Menu toggle
+        function toggleMoreMenu(event) {
+            if (event) event.preventDefault();
+            const menu = document.getElementById("moreMenu");
+            if (menu.style.display === "flex") {
+                menu.style.display = "none";
+            } else {
+                menu.style.display = "flex";
+            }
+        }
+
+        document.addEventListener("click", function(event) {
+            const menu = document.getElementById("moreMenu");
+            const moreBtn = document.querySelector('.mobile-nav-item[onclick*="toggleMoreMenu"]');
+            if (menu && menu.style.display === "flex") {
+                if (!menu.contains(event.target) && (!moreBtn || !moreBtn.contains(event.target))) {
+                    menu.style.display = "none";
+                }
+            }
+        });
+
+        // Service Worker Registration
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("service-worker.js").catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
