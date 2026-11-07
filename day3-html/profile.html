@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Inventory System</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#1e3a5f">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="logo.png" alt="Compact II Logo" class="sidebar-logo" onerror="this.style.display='none'">
+                <h2>Inventory</h2>
+                <p>Compact II Gencon Inc.</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" data-role="admin-management">📊 Dashboard</a>
+                <a href="index.html">📝 Add Item</a>
+                <a href="items.html">📋 Item List</a>
+                <a href="issue.html" data-role="admin-personnel">📤 Issue/Release</a>
+                <a href="scan.html" data-role="admin-personnel">📱 Scan QR</a>
+                <a href="discrepancies.html" data-role="admin-management">⚠️ Discrepancies</a>
+                <a href="reports.html" data-role="admin-management">📈 Reports</a>
+                <a href="users.html" data-role="admin">👥 Users</a>
+                <a href="profile.html" class="active">👤 My Profile</a>
+                <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <h1>My Profile</h1>
+                <div class="user-info">
+                    <span class="user-name">👤 Loading...</span>
+                </div>
+            </header>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                
+                <!-- USER DETAILS CARD -->
+                <section class="content-card">
+                    <h2>👤 Account Details</h2>
+                    <div style="margin-top: 20px;">
+                        <p style="margin-bottom: 10px; font-size: 15px;"><strong>Full Name:</strong> <span id="profFullName" style="color: #555;"></span></p>
+                        <p style="margin-bottom: 10px; font-size: 15px;"><strong>Username:</strong> <span id="profUsername" style="color: #555;"></span></p>
+                        <p style="margin-bottom: 10px; font-size: 15px;"><strong>Email:</strong> <span id="profEmail" style="color: #555;"></span></p>
+                        <p style="margin-bottom: 10px; font-size: 15px;"><strong>Role:</strong> <span id="profRole" style="color: #1e3a5f; font-weight: bold;"></span></p>
+                    </div>
+                </section>
+
+                <!-- CHANGE PASSWORD CARD -->
+                <section class="content-card">
+                    <h2>🔒 Change Password</h2>
+                    <div id="passError" style="display:none; background:#ffebee; color:#c62828; padding:10px; border-radius:5px; margin-bottom:15px; font-size:13px;"></div>
+                    <div id="passSuccess" style="display:none; background:#e8f5e9; color:#2e7d32; padding:10px; border-radius:5px; margin-bottom:15px; font-size:13px;"></div>
+
+                    <form id="changePasswordForm" style="margin-top: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px;">Current Password:</label>
+                            <input type="password" id="currentPassword" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px;">New Password:</label>
+                            <input type="password" id="newPassword" minlength="6" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                            <small style="color: #666; font-size: 12px;">At least 6 characters</small>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px;">Confirm New Password:</label>
+                            <input type="password" id="confirmPassword" minlength="6" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                        </div>
+                        <button type="submit" id="btnChangePass" style="background-color: #1e3a5f; width: 100%;">Update Password</button>
+                    </form>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
