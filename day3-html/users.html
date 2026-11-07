@@ -130,6 +130,36 @@
         </div>
     </div>
 
+        <!-- EDIT ROLE MODAL -->
+    <div id="editRoleModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeEditRoleModal()">&times;</button>
+            <h2>✏️ Edit User Role</h2>
+            
+            <div id="roleError" style="display:none; background:#ffebee; color:#c62828; padding:10px; border-radius:5px; margin-bottom:15px; font-size:13px;"></div>
+
+            <form id="editRoleForm">
+                <input type="hidden" id="editUserId">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px;">Username:</label>
+                    <input type="text" id="editUsername" readonly style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #e9ecef;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px;">Select New Role:</label>
+                    <select id="editRole" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                        <option value="Personnel">Personnel</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Management">Management</option>
+                    </select>
+                </div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" onclick="closeEditRoleModal()" style="background-color: #95a5a6; margin-right: 10px;">Cancel</button>
+                    <button type="submit" id="saveRoleBtn" style="background-color: #f39c12;">Update Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="users.js"></script>
