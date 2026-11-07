@@ -273,7 +273,15 @@ async function exportToExcel() {
         worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1 };
 
         // Isama ang Logo
-        const logoResponse = await fetch('sidebar-logo.png');
+               
+                // Gagamit tayo ng absolute URL para siguradong makuha yung logo sa Vercel
+        const logoUrl = window.location.origin + '/logo.png';
+        const logoResponse = await fetch(logoUrl);
+        
+        if (!logoResponse.ok) {
+            console.warn("Logo not found, exporting without image.");
+            throw new Error("Logo not found");
+        }
         const logoBuffer = await logoResponse.arrayBuffer();
         const logoId = workbook.addImage({
             buffer: logoBuffer,
@@ -357,6 +365,14 @@ async function exportToExcel() {
 
     } catch (error) {
         console.error("Excel Export Error:", error);
-        alert("⚠️ Cannot generate Excel file. Check if 'sidebar-logo.png' is in the same folder.");
+        // Fallback: Kung walang logo, i-export pa rin natin yung file na walang image
+        if (error.message === "Logo not found") {
+            console.log("Proceeding to export without logo...");
+            // Dito natin ipagpapatuloy yung paggawa ng excel kahit walang image
+            // Pero para madali, io-alert na lang natin na walang logo na nahanap
+            alert("⚠️ Logo image not found. Please ensure 'logo.png' is in the folder.");
+        } else {
+            alert("⚠️ Cannot generate Excel file. Please check console for details.");
+        }
     }
 }
