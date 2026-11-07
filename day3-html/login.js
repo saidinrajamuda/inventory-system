@@ -1,8 +1,13 @@
 // ===== LOGIN PAGE =====
 
-redirectIfLoggedIn();
-
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. Check kung naka-login na, kung oo, deretso dashboard
+    if (isLoggedIn()) {
+        window.location.href = "dashboard.html";
+        return;
+    }
+
+    // 2. I-setup ang form
     const form = document.getElementById("loginForm");
     if (form) {
         form.addEventListener("submit", handleLogin);
@@ -10,7 +15,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function handleLogin(event) {
-    event.preventDefault();
+    // PINAKA-IMPORTANTE: Pigilan ang page refresh at URL submission
+    event.preventDefault(); 
 
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
@@ -30,8 +36,11 @@ async function handleLogin(event) {
         const result = await response.json();
 
         if (result.success) {
+            // I-save sa Local Storage
             localStorage.setItem("token", result.data.token);
             localStorage.setItem("user", JSON.stringify(result.data.user));
+            
+            // Deretso Dashboard
             window.location.href = "dashboard.html";
         } else {
             showError(result.message || "Invalid username or password.");

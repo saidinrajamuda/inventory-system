@@ -7,7 +7,6 @@
     
     <!-- PWA LINKS -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="theme-color" content="#1e3a5f">
 
     <link rel="stylesheet" href="style.css">
@@ -110,13 +109,14 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-logo" style="text-align: center; margin-bottom: 30px;">
-                <img src="logo.png" alt="Compact II Logo" style="max-width: 200px; max-height: 100px; object-fit: contain; margin-bottom: 15px;">
+                <img src="logo.png" alt="Compact II Logo" style="max-width: 200px; max-height: 100px; object-fit: contain; margin-bottom: 15px;" onerror="this.style.display='none'">
                 <h1 style="font-size: 22px; margin-bottom: 5px; color: #1e3a5f;">Inventory System</h1>
                 <p style="color: #666; font-size: 13px;">Compact II Gencon Inc.</p>
             </div>
             <div id="errorMsg" class="auth-error"></div>
 
-            <form id="loginForm">
+            <!-- IMPORTANTE: Nilagyan natin ng onsubmit="return false;" para hindi mag-refresh at hindi mapunta sa URL yung password -->
+            <form id="loginForm" onsubmit="return false;">
                 <div class="auth-form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
@@ -125,7 +125,7 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
-                <button type="submit" class="auth-btn">🔐 Sign In</button>
+                <button type="submit" class="auth-btn" onclick="handleLogin(event)">🔐 Sign In</button>
             </form>
 
             <div class="auth-link">
@@ -133,31 +133,21 @@
             </div>
         </div>
     </div>
-        <!-- MOBILE BOTTOM NAVIGATION -->
-    <nav class="mobile-bottom-nav">
-        <a href="dashboard.html" class="mobile-nav-item">
-            <span class="icon">📊</span><span class="text">Home</span>
-        </a>
-        <a href="items.html" class="mobile-nav-item">
-            <span class="icon">📋</span><span class="text">Items</span>
-        </a>
-        <a href="scan.html" class="mobile-nav-item">
-            <span class="icon">📱</span><span class="text">Scan</span>
-        </a>
-        <a href="issue.html" class="mobile-nav-item">
-            <span class="icon">📤</span><span class="text">Issue</span>
-        </a>
-        <!-- Bagong More Button -->
-        <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMoreMenu(event)">
-            <span class="icon">☰</span><span class="text">More</span>
-        </a>
-    </nav>
 
-    <!-- MORE MENU POPUP (Nakatago sa umpisa) -->
-    <div id="moreMenu" class="more-menu-popup">
-        <a href="discrepancies.html">⚠️ Discrepancies</a>
-        <a href="reports.html">📈 Reports</a>
-        <a href="users.html">👥 Users</a>
-        <a href="profile.html">👤 My Profile</a>
-        <a href="#" onclick="logout()" style="color: #e74c3c; border-top: 1px solid #eee; margin-top: 5px; padding-top: 10px;">🚪 Logout</a>
-    </div>
+    <!-- ITO ANG NAWALA KANINA: Dapat nandito ang mga scripts para gumana ang login -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="login.js"></script>
+
+    <!-- PWA SERVICE WORKER -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js")
+                .then(() => console.log("✅ SW registered"))
+                .catch((err) => console.warn("SW failed:", err));
+        });
+    }
+    </script>
+</body>
+</html>
