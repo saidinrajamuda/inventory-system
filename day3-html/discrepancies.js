@@ -1,14 +1,61 @@
-// ===== DISCREPANCIES PAGE - FULL WORKING CODE =====
+// ===== DISCREPANCIES PAGE - WITH MODAL =====
 
 const API_URL = `${window.API_BASE_URL}/api/verifications`;
 
-// I-load ang data pagka-open ng page
 document.addEventListener("DOMContentLoaded", () => {
     if (!isLoggedIn()) {
         window.location.href = "login.html";
         return;
     }
     loadDiscrepancies();
+
+    // Handle Resolve Form Submit
+    const resolveForm = document.getElementById("resolveForm");
+    if (resolveForm) {
+        resolveForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById("resolveId").value;
+            const remarks = document.getElementById("resolveRemarks").value.trim();
+            const btn = document.getElementById("saveResolveBtn");
+            const errorEl = document.getElementById("resolveError");
+
+            if (!remarks) {
+                errorEl.textContent = "⚠️ Remarks cannot be empty.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            btn.textContent = "Saving...";
+            btn.disabled = true;
+            errorEl.style.display = "none";
+
+            try {
+                const response = await fetch(`${API_URL}/${id}/resolve`, {
+                    method: "PUT",
+                    headers: authHeaders(),
+                    body: JSON.stringify({ remarks })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("✅ Discrepancy resolved!");
+                    closeResolveModal();
+                    loadDiscrepancies(); // I-refresh yung table
+                } else {
+                    errorEl.textContent = result.message;
+                    errorEl.style.display = "block";
+                }
+            } catch (error) {
+                console.error("Resolve error:", error);
+                errorEl.textContent = "⚠️ Cannot resolve at the moment.";
+                errorEl.style.display = "block";
+            } finally {
+                btn.textContent = "Resolve Now";
+                btn.disabled = false;
+            }
+        });
+    }
 });
 
 async function loadDiscrepancies() {
@@ -16,17 +63,12 @@ async function loadDiscrepancies() {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#666;">⏳ Loading data...</td></tr>`;
 
     try {
-        // Kunin lahat ng verifications (kasama na dito ang Matched at Discrepancy)
-        const response = await fetch(API_URL, {
-            headers: authHeaders()
-        });
+        const response = await fetch(API_URL, { headers: authHeaders() });
         const result = await response.json();
 
-        if (!result.success) {
-            throw new Error(result.message);
-        }
+        if (!result.success) throw new Error(result.message);
 
-        // I-filter lang natin yung mga "Discrepancy"
+        // Kukunin lang natin yung mga Discrepancy at hindi pa Resolved
         const discrepancies = result.data.filter(v => v.status === "Discrepancy");
 
         if (discrepancies.length === 0) {
@@ -34,7 +76,6 @@ async function loadDiscrepancies() {
             return;
         }
 
-        // I-render sa table
         tbody.innerHTML = discrepancies.map(v => {
             const date = new Date(v.created_at).toLocaleString();
             const difference = v.actual_qty - v.expected_qty;
@@ -55,7 +96,7 @@ async function loadDiscrepancies() {
                         </span>
                     </td>
                     <td>
-                        <button onclick="showResolvePrompt(${v.id}, '${v.name}')" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Resolve</button>
+                        <button onclick="openResolveModal(${v.id}, '${v.name.replace(/'/g, "\\'")}')" style="background:#f39c12; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">Resolve</button>
                     </td>
                 </tr>
             `;
@@ -73,32 +114,15 @@ async function loadDiscrepancies() {
     }
 }
 
-// Function para sa Resolve button
-async function showResolvePrompt(id, itemName) {
-    const remarks = prompt(`Enter resolution remarks for ${itemName}:\n(e.g., "Item was found", "Reported missing")`);
-    
-    if (remarks === null) return; // I-cancel ni user
-    if (remarks.trim() === "") {
-        alert("⚠️ Remarks cannot be empty.");
-        return;
-    }
+// Modal Functions
+function openResolveModal(id, itemName) {
+    document.getElementById("resolveId").value = id;
+    document.getElementById("resolveItemName").value = itemName;
+    document.getElementById("resolveRemarks").value = "";
+    document.getElementById("resolveError").style.display = "none";
+    document.getElementById("resolveModal").style.display = "flex";
+}
 
-    try {
-        const response = await fetch(`${window.API_BASE_URL}/api/verifications/${id}/resolve`, {
-            method: "PUT",
-            headers: authHeaders(),
-            body: JSON.stringify({ remarks })
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            alert("✅ Discrepancy resolved!");
-            loadDiscrepancies(); // I-refresh yung table
-        } else {
-            alert("❌ " + result.message);
-        }
-    } catch (error) {
-        console.error("Resolve error:", error);
-        alert("⚠️ Cannot resolve at the moment.");
-    }
+function closeResolveModal() {
+    document.getElementById("resolveModal").style.display = "none";
 }
