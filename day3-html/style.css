@@ -551,24 +551,67 @@ tbody tr:hover {
         font-size: 11px;
     }
 }
-/* ===== SIDEBAR NAVIGATION (Vertical & Collapsible) ===== */
-.sidebar-nav {
-    display: flex;
-    flex-direction: column; /* Siguradong pababa (vertical) */
-    gap: 5px;
-    margin-top: 15px;
+/* ===== SIDEBAR (Modern Dark Style) ===== */
+.sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    color: #cbd5e1;
+    padding: 20px 15px;
+    flex-shrink: 0;
+    
+    /* ITO ANG PINAKA-IMPORTANTENG FIX */
+    display: block !important; 
+    
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
 }
 
-/* Default na itsura ng links */
+/* Sidebar Header (Logo area) */
+.sidebar-header {
+    text-align: center;
+    padding: 15px 10px;
+    margin-bottom: 25px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-logo {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.sidebar-header h2, 
+.sidebar-header p {
+    display: none; 
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+    display: flex !important;
+    flex-direction: column !important; /* Pilitin na pababa (vertical) */
+    gap: 4px;
+}
+
 .sidebar-nav a {
     color: #94a3b8;
     text-decoration: none;
-    padding: 10px 15px;
+    padding: 12px 15px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    display: block; /* Importante para kumpleto ang clickable area */
+    
+    /* Gawing block para kunin ang buong lapad ng menu */
+    display: block !important; 
+    
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .sidebar-nav a:hover {
@@ -580,65 +623,4 @@ tbody tr:hover {
     background-color: #3b82f6;
     color: white;
     font-weight: 600;
-}
-
-/* ===== DETAILS & SUMMARY (Dropdown Styles) ===== */
-.sidebar-nav details {
-    width: 100%;
-}
-
-.sidebar-nav summary {
-    color: #cbd5e1;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    list-style: none; /* Tinatanggal yung default triangle arrow */
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Para mapunta sa dulo yung arrow */
-    transition: background 0.2s;
-}
-
-/* Tinatanggal yung default arrow ng browser */
-.sidebar-nav summary::-webkit-details-marker {
-    display: none;
-}
-
-/* Custom arrow gamit ang CSS */
-.sidebar-nav summary::after {
-    content: '▼';
-    font-size: 10px;
-    transition: transform 0.3s ease;
-}
-
-/* Pagbukas ng details, i-rotate pataas yung arrow */
-.sidebar-nav details[open] summary::after {
-    transform: rotate(180deg);
-}
-
-.sidebar-nav summary:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: white;
-}
-
-/* Sub-menu container */
-.sub-menu {
-    display: flex;
-    flex-direction: column;
-    padding-left: 15px; /* Indent para malaman na sub-menu siya */
-    margin-top: 5px;
-    border-left: 1px solid rgba(255,255,255,0.1); /* Vertical line design */
-    margin-left: 15px;
-}
-
-.sub-menu a {
-    padding: 8px 15px;
-    font-size: 12px;
-    color: #94a3b8;
-}
-
-.sub-menu a:hover {
-    color: white;
 }
