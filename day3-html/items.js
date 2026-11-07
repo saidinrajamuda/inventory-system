@@ -266,6 +266,12 @@ async function exportToExcel() {
         return;
     }
 
+    // ✅ CHECK KUNG NAKA-LOAD ANG LIBRARY
+    if (typeof ExcelJS === 'undefined') {
+        alert("⚠️ Excel library is not loaded. Please check if the script tag for ExcelJS is in your HTML file.");
+        return;
+    }
+
     try {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Inventory');
@@ -367,6 +373,7 @@ async function exportToExcel() {
 
     } catch (error) {
         console.error("Excel Export Error:", error);
-        alert("⚠️ Cannot generate Excel file.");
+        // Ipakita ang totoong error sa alert para malaman natin kung ano ang mali
+        alert("⚠️ Cannot generate Excel file.\nError: " + error.message);
     }
 }
