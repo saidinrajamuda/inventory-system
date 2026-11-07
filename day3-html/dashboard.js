@@ -15,88 +15,68 @@ function dismissAlerts() {
 // ===== LOAD STATS =====
 async function loadStats() {
     try {
-        const response = await fetch(API_ITEMS, {
-            headers: authHeaders()
-        });
+        const response = await fetch(API_ITEMS, { headers: authHeaders() });
         const result = await response.json();
-
         if (!result.success) return;
 
         const items = result.data;
 
         // ===== ALERTS LOGIC =====
         const alertsContainer = document.getElementById("alertsContainer");
-        if (alertsContainer) {
-            if (alertsDismissed) {
-                // Kung na-dismiss na, wag nang ipakita ulit
-                alertsContainer.innerHTML = ""; 
-            } else {
-                let alertHTML = "";
-                
-                // 1. Out of Stock
-                const outOfStock = items.filter(i => i.quantity === 0);
-                if (outOfStock.length > 0) {
-                    alertHTML += `
-                        <div style="position: relative; background: #ffebee; border-left: 5px solid #e74c3c; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <span onclick="dismissAlerts()" style="position: absolute; top: 10px; right: 15px; cursor: pointer; color: #c62828; font-size: 20px; font-weight: bold;" title="Dismiss">&times;</span>
-                            <h4 style="color: #c62828; margin: 0 0 10px 0;">🚨 Out of Stock Alert (${outOfStock.length})</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #c62828; font-size: 14px;">
-                                ${outOfStock.map(i => `<li><strong>${i.name}</strong> (${i.code}) is completely out of stock!</li>`).join('')}
-                            </ul>
+        if (alertsContainer && !alertsDismissed) {
+            let alertHTML = "";
+            
+            const outOfStock = items.filter(i => i.quantity === 0);
+            if (outOfStock.length > 0) {
+                alertHTML += `
+                    <div class="alert-card alert-danger">
+                        <div class="alert-icon">🚨</div>
+                        <div class="alert-content">
+                            <h4>Out of Stock Alert (${outOfStock.length})</h4>
+                            <p>${outOfStock.slice(0, 2).map(i => `${i.name} (${i.code})`).join(', ')} ${outOfStock.length > 2 ? 'and others...' : 'is out of stock.'}</p>
                         </div>
-                    `;
-                }
-
-                // 2. Low Stock
-                const lowStockList = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level);
-                if (lowStockList.length > 0) {
-                    alertHTML += `
-                        <div style="position: relative; background: #fff3e0; border-left: 5px solid #f39c12; padding: 15px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <span onclick="dismissAlerts()" style="position: absolute; top: 10px; right: 15px; cursor: pointer; color: #d35400; font-size: 20px; font-weight: bold;" title="Dismiss">&times;</span>
-                            <h4 style="color: #d35400; margin: 0 0 10px 0;">⚠️ Low Stock Warning (${lowStockList.length})</h4>
-                            <ul style="margin: 0; padding-left: 20px; color: #d35400; font-size: 14px;">
-                                ${lowStockList.slice(0, 5).map(i => `<li><strong>${i.name}</strong> (${i.code}) is running low: <b>${i.quantity} left</b> (Reorder level: ${i.reorder_level})</li>`).join('')}
-                            </ul>
-                            ${lowStockList.length > 5 ? `<p style="margin: 5px 0 0 0; font-size: 13px; color: #d35400; font-weight: bold;">...and ${lowStockList.length - 5} more items.</p>` : ''}
-                        </div>
-                    `;
-                }
-
-                alertsContainer.innerHTML = alertHTML;
+                        <button class="alert-close" onclick="dismissAlerts()">&times;</button>
+                    </div>
+                `;
             }
+
+            const lowStockList = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level);
+            if (lowStockList.length > 0) {
+                alertHTML += `
+                    <div class="alert-card alert-warning">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <h4>Low Stock Warning (${lowStockList.length})</h4>
+                            <p>${lowStockList.slice(0, 2).map(i => `${i.name} (${i.quantity} left)`).join(', ')} ${lowStockList.length > 2 ? 'and others are running low.' : 'is running low.'}</p>
+                        </div>
+                        <button class="alert-close" onclick="dismissAlerts()">&times;</button>
+                    </div>
+                `;
+            }
+            alertsContainer.innerHTML = alertHTML;
         }
 
         // === STAT CARDS ===
         document.getElementById("totalItems").textContent = items.length;
-
         const available = items.filter(i => i.condition === "Available").length;
         document.getElementById("availableItems").textContent = available;
-
-        // Dito natin kinukuha yung mismong low stock count
         const lowStockCount = items.filter(i => i.quantity > 0 && i.quantity <= i.reorder_level).length;
         document.getElementById("lowStock").textContent = lowStockCount;
 
-        // === VERIFICATIONS (Discrepancies Count) ===
-        const vResponse = await fetch(API_VERIFICATIONS, {
-            headers: authHeaders()
-        });
+        // === VERIFICATIONS ===
+        const vResponse = await fetch(API_VERIFICATIONS, { headers: authHeaders() });
         const vResult = await vResponse.json();
-
         if (vResult.success) {
             const discrepancies = vResult.data.filter(v => v.status === "Discrepancy").length;
             document.getElementById("discrepancies").textContent = discrepancies;
         }
 
-        // === LAST UPDATED ===
-        const now = new Date();
-        document.getElementById("lastUpdated").textContent = 
-            `Updated: ${now.toLocaleTimeString()}`;
+        document.getElementById("lastUpdated").textContent = `Updated: ${new Date().toLocaleTimeString()}`;
 
     } catch (error) {
         console.error("Error loading stats:", error);
     }
 }
-
 // ===== LOAD VERIFICATIONS =====
 async function loadVerifications() {
     const tbody = document.getElementById("verificationsTable");
