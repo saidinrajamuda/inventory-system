@@ -259,7 +259,7 @@ function printItemList() {
     }, 500);
 }
 
-// ===== EXPORT TO REAL EXCEL (.xlsx) WITH LOGO =====
+// ===== EXPORT TO REAL EXCEL (.xlsx) WITH LOGO (SAFE MODE) =====
 async function exportToExcel() {
     if (!allItems || allItems.length === 0) {
         alert("⚠️ No items to export.");
@@ -270,29 +270,31 @@ async function exportToExcel() {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Inventory');
 
+        // Setup page (A4)
         worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1 };
 
-        // Isama ang Logo
-               
-                // Gagamit tayo ng absolute URL para siguradong makuha yung logo sa Vercel
-        const logoUrl = window.location.origin + '/logo.png';
-        const logoResponse = await fetch(logoUrl);
-        
-        if (!logoResponse.ok) {
-            console.warn("Logo not found, exporting without image.");
-            throw new Error("Logo not found");
-        }
-        const logoBuffer = await logoResponse.arrayBuffer();
-        const logoId = workbook.addImage({
-            buffer: logoBuffer,
-            extension: 'png',
-        });
+        // --- LOGO FETCHING LOGIC (SAFE) ---
+        try {
+            // Hahanapin natin yung image sa parehong folder
+            const logoResponse = await fetch('sidebar-logo.png');
+            
+            if (logoResponse.ok) {
+                const logoBuffer = await logoResponse.arrayBuffer();
+                const logoId = workbook.addImage({
+                    buffer: logoBuffer,
+                    extension: 'png',
+                });
 
-        // I-position ang logo sa gitna
-        worksheet.addImage(logoId, {
-            tl: { col: 0.5, row: 0 },
-            ext: { width: 300, height: 90 }
-        });
+                worksheet.addImage(logoId, {
+                    tl: { col: 1, row: 0 },
+                    ext: { width: 280, height: 90 }
+                });
+            } else {
+                console.warn("Logo 'sidebar-logo.png' not found. Proceeding without logo.");
+            }
+        } catch (imgError) {
+            console.warn("Error loading logo, skipping image.", imgError);
+        }
 
         // Space para sa logo
         for (let i = 0; i < 6; i++) {
@@ -355,7 +357,7 @@ async function exportToExcel() {
         worksheet.getColumn(5).width = 10;
         worksheet.getColumn(6).width = 10;
 
-        // I-download ang file
+        // Download
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const link = document.createElement("a");
@@ -365,14 +367,6 @@ async function exportToExcel() {
 
     } catch (error) {
         console.error("Excel Export Error:", error);
-        // Fallback: Kung walang logo, i-export pa rin natin yung file na walang image
-        if (error.message === "Logo not found") {
-            console.log("Proceeding to export without logo...");
-            // Dito natin ipagpapatuloy yung paggawa ng excel kahit walang image
-            // Pero para madali, io-alert na lang natin na walang logo na nahanap
-            alert("⚠️ Logo image not found. Please ensure 'logo.png' is in the folder.");
-        } else {
-            alert("⚠️ Cannot generate Excel file. Please check console for details.");
-        }
+        alert("⚠️ Cannot generate Excel file.");
     }
 }
