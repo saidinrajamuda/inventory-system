@@ -100,79 +100,67 @@ tbody button {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-    width: 260px; /* Nilakihan natin nang konti para magkasya ang logo */
-    /* Palitan natin ang kulay ng background para maging mas premium/professional */
-    background-color: #0f172a; /* Mas dark, corporate slate blue */
+    width: 250px;
+    background-color: #1e3a5f;
     color: white;
     padding: 20px;
     flex-shrink: 0;
     display: flex;
-    flex-direction: column;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* May konting shadow sa kanan */
+    flex-direction: column; /* Importante ito para pababa ang layout */
 }
 
-/* SIDEBAR LOGO & HEADER (Updated) */
+/* SIDEBAR HEADER (Yung Puting Card na may Image) */
 .sidebar-header {
     text-align: center;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Manipis na border sa baba */
+    padding: 10px;
     margin-bottom: 20px;
-    /* Tinanggal natin yung background-color: white at box-shadow */
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex; /* Inayos natin para hindi magulo */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Image design */
 .sidebar-logo {
     width: 100%;
-    max-width: 220px; /* Sakto lang para sa lapad ng sidebar */
+    max-width: 180px;
     height: auto;
-    object-fit: contain;
     display: block;
-    margin: 0 auto 10px auto;
-    /* Tinanggal natin ang background-color at padding */
 }
 
-/* Gawing puti at ayusin ang text (para bumagay sa dark blue background) */
-.sidebar-header h2 {
-    font-size: 18px;
-    margin: 0 0 5px 0;
-    color: #ffffff;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
+/* Itago ang text dahil nasa image na */
+.sidebar-header h2, 
 .sidebar-header p {
-    font-size: 12px;
-    color: #94a3b8; /* Light gray para readable */
-    margin: 0;
-}
-/* ===== MAIN CONTENT ===== */
-.main-content {
-    flex: 1;
-    padding: 25px;
-    background-color: #f4f6f8;
-    overflow-y: auto;
-    overflow-x: hidden;
+    display: none !important; 
 }
 
-.topbar {
+/* SIDEBAR NAVIGATION (Ibabalik sa patayo) */
+.sidebar-nav {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex-direction: column; /* Ito ang nagpapa-patayo sa mga links */
+    gap: 5px;
 }
 
-.topbar h1 {
-    font-size: 22px;
-    color: #1e3a5f;
-}
-
-.user-info {
+.sidebar-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 5px;
     font-size: 14px;
-    color: #666;
+    display: block; /* Sinisiguro na buong linya ang clickable */
+    transition: background-color 0.2s;
+}
+
+.sidebar-nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav a.active {
+    background-color: #2c5282;
+    font-weight: 600;
 }
 
 /* ===== STAT CARDS (GRID) ===== */
