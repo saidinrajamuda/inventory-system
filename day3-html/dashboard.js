@@ -1,11 +1,10 @@
-// ===== DASHBOARD - DAY 30 (with Dismissible Alerts) =====
+// ===== DASHBOARD - FIXED & STABLE =====
 
 const API_ITEMS = `${window.API_BASE_URL}/api/items`;
 const API_VERIFICATIONS = `${window.API_BASE_URL}/api/verifications`;
 
-let alertsDismissed = false; // Flag para malaman kung na-close na ng user
+let alertsDismissed = false;
 
-// ===== DISMISS ALERTS =====
 function dismissAlerts() {
     alertsDismissed = true;
     const alertsContainer = document.getElementById("alertsContainer");
@@ -17,6 +16,7 @@ async function loadStats() {
     try {
         const response = await fetch(API_ITEMS, { headers: authHeaders() });
         const result = await response.json();
+
         if (!result.success) return;
 
         const items = result.data;
@@ -75,16 +75,20 @@ async function loadStats() {
 
     } catch (error) {
         console.error("Error loading stats:", error);
+        // Kapag nag-error, gawing "0" imbes na "Loading" para hindi mag-stuck
+        document.getElementById("totalItems").textContent = "0";
+        document.getElementById("availableItems").textContent = "0";
+        document.getElementById("lowStock").textContent = "0";
+        document.getElementById("discrepancies").textContent = "0";
     }
 }
+
 // ===== LOAD VERIFICATIONS =====
 async function loadVerifications() {
     const tbody = document.getElementById("verificationsTable");
 
     try {
-        const response = await fetch(API_VERIFICATIONS, {
-            headers: authHeaders()
-        });
+        const response = await fetch(API_VERIFICATIONS, { headers: authHeaders() });
         const result = await response.json();
 
         if (!result.success || result.data.length === 0) {
@@ -98,7 +102,7 @@ async function loadVerifications() {
             return;
         }
 
-        const recent = result.data.slice(0, 10);
+        const recent = result.data.slice(0, 5); // Gawing 5 lang muna para malinis sa mobile
 
         tbody.innerHTML = recent.map(v => {
             const date = new Date(v.created_at).toLocaleString();
@@ -114,14 +118,9 @@ async function loadVerifications() {
                     <td>${v.expected_qty}</td>
                     <td>${v.actual_qty}</td>
                     <td>
-                        <span style="
-                            padding: 4px 10px;
-                            border-radius: 12px;
-                            font-size: 12px;
-                            font-weight: 600;
-                            color: ${statusColor};
-                            background: ${statusBg};
-                        ">${statusIcon} ${v.status}</span>
+                        <span style="padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: ${statusColor}; background: ${statusBg};">
+                            ${statusIcon} ${v.status}
+                        </span>
                     </td>
                 </tr>
             `;
@@ -132,7 +131,7 @@ async function loadVerifications() {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
-                    ⚠️ Cannot connect to server
+                    ⚠️ Cannot connect to server. Refresh the page.
                 </td>
             </tr>
         `;
@@ -153,7 +152,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     refreshDashboard();
-    setInterval(refreshDashboard, 5000);
+    
+    // Mag-refresh every 30 seconds (para hindi mabigat sa server)
+    setInterval(refreshDashboard, 30000);
 
-    console.log("✅ Dashboard loaded with real-time monitoring!");
+    console.log("✅ Dashboard loaded successfully!");
 });
