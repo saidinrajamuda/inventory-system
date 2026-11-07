@@ -100,65 +100,51 @@ tbody button {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-    width: 250px;
-    background-color: #1e3a5f;
+    width: 260px; /* Nilakihan natin nang konti para magkasya ang logo */
+    /* Palitan natin ang kulay ng background para maging mas premium/professional */
+    background-color: #0f172a; /* Mas dark, corporate slate blue */
     color: white;
     padding: 20px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* May konting shadow sa kanan */
 }
 
-/* SIDEBAR LOGO & HEADER (UPDATED) */
+/* SIDEBAR LOGO & HEADER (Updated) */
 .sidebar-header {
     text-align: center;
-    padding: 15px 10px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Manipis na border sa baba */
     margin-bottom: 20px;
-    background-color: #ffffff; /* Puting background */
-    border-radius: 8px;        /* Bilog na sulok */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Shadow para lumutang */
+    /* Tinanggal natin yung background-color: white at box-shadow */
 }
 
 /* Image design */
 .sidebar-logo {
     width: 100%;
-    max-width: 180px; /* Kinontrol natin ang lapad (sakto lang, hindi sobrang laki) */
+    max-width: 220px; /* Sakto lang para sa lapad ng sidebar */
     height: auto;
+    object-fit: contain;
     display: block;
-    margin: 0 auto;
+    margin: 0 auto 10px auto;
+    /* Tinanggal natin ang background-color at padding */
 }
 
-/* Itago yung text dahil nasa mismong image na natin nilagay */
-.sidebar-header h2, 
+/* Gawing puti at ayusin ang text (para bumagay sa dark blue background) */
+.sidebar-header h2 {
+    font-size: 18px;
+    margin: 0 0 5px 0;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
 .sidebar-header p {
-    display: none; 
+    font-size: 12px;
+    color: #94a3b8; /* Light gray para readable */
+    margin: 0;
 }
-
-/* SIDEBAR NAVIGATION */
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.sidebar-nav a {
-    color: white;
-    text-decoration: none;
-    padding: 10px 12px;
-    border-radius: 5px;
-    font-size: 14px;
-    transition: background-color 0.2s;
-}
-
-.sidebar-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-nav a.active {
-    background-color: #2c5282;
-    font-weight: 600;
-}
-
 /* ===== MAIN CONTENT ===== */
 .main-content {
     flex: 1;
