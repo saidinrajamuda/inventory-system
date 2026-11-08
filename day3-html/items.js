@@ -76,8 +76,8 @@ function renderTable(items) {
             </td>
             <td data-label="Condition">${item.condition}</td>
             <td data-label="Actions">
-                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60;">QR</button>
-                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad;">Barcode</button>
+                <button onclick="showQRCode('${item.id}')" style="background-color: #27ae60; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">QR</button>
+                <button onclick="showBarcode('${item.id}')" style="background-color: #8e44ad; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">Barcode</button>
             </td>
         </tr>
     `}).join("");
@@ -179,11 +179,7 @@ function printItemList() {
                 .signature-line { border-bottom: 1px solid #000; margin-bottom: 5px; height: 20px; }
                 .signature-name { font-weight: bold; font-size: 12px; margin: 0; text-transform: uppercase; }
                 .signature-role { font-size: 11px; margin: 0; }
-                @media print { 
-                    body { padding: 0; }
-                    .header-image-container { margin-bottom: 10px; }
-                    @page { margin: 15mm; }
-                }
+                @media print { body { padding: 0; } .header-image-container { margin-bottom: 10px; } @page { margin: 15mm; } }
             </style>
         </head>
         <body>
@@ -243,67 +239,5 @@ function printItemList() {
     
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
 }
-
-// ===== EXPORT TO EXCEL (CSV) =====
-function exportToExcel() {
-    if (!allItems || allItems.length === 0) {
-        alert("⚠️ No items to export.");
-        return;
-    }
-
-    let csvContent = "\uFEFF"; 
-    csvContent += "INVENTORY REPORT\n";
-    csvContent += `AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}\n\n`;
-    csvContent += "NO.,PRODUCT CODE,NAME / DESCRIPTION,CLASSIFICATION,QTY,UNIT,CONDITION,LOCATION\n";
-
-    const groupedItems = {};
-    allItems.forEach(item => {
-        const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
-        if (!groupedItems[areaName]) groupedItems[areaName] = [];
-        groupedItems[areaName].push(item);
-    });
-
-    for (const [areaName, items] of Object.entries(groupedItems)) {
-        csvContent += `"${areaName.toUpperCase()}"\n`; 
-        
-        items.forEach((item, index) => {
-            const row = [
-                index + 1,
-                `"${item.code}"`,
-                `"${item.name}"`,
-                `"${item.category}"`,
-                item.quantity,
-                `"${item.unit || 'pcs'}"`,
-                `"${item.condition}"`,
-                `"${item.location || areaName}"`
-            ].join(",");
-            csvContent += row + "\n";
-        });
-        csvContent += "\n"; 
-    }
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `CompactII_Inventory_Report_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// ===== INITIALIZE =====
-document.addEventListener("DOMContentLoaded", () => {
-    if (!isLoggedIn()) {
-        window.location.href = "login.html";
-        return;
-    }
-    loadItems();
-    loadWarehousesForFilter(); 
-});
