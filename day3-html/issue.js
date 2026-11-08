@@ -149,6 +149,7 @@ async function releaseRequest(id) {
     loadRequests();
     loadItemsDropdown();
 }
+
 // ===== EXPORT TO EXCEL (BY AREA / WAREHOUSE) =====
 async function exportToAreaExcel() {
     if (!allItems || allItems.length === 0) {
