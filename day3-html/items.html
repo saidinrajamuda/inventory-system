@@ -93,86 +93,10 @@
         <a href="#" onclick="logout()" style="color: #e74c3c; border-top: 1px solid #eee; margin-top: 5px; padding-top: 10px;">🚪 Logout</a>
     </div>
 
-    <!-- LOCAL SCRIPTS -->
+    <!-- MGA SCRIPTS -->
+    <script src="exceljs.min.js"></script> <!-- Ito yung ni-download natin na local file -->
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="items.js"></script>
-    
-    <!-- SIMPLE EXCEL EXPORT -->
-    <script>
-        function exportToExcel() {
-            if (!allItems || allItems.length === 0) {
-                alert("⚠️ No items to export.");
-                return;
-            }
-
-            // Gumawa ng HTML table para gawing Excel
-            let tableHTML = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        table { border-collapse: collapse; width: 100%; }
-                        th { background-color: #1e3a5f; color: white; border: 1px solid #000; padding: 8px; text-align: left; }
-                        td { border: 1px solid #000; padding: 5px; }
-                    </style>
-                </head>
-                <body>
-                    <h2>INVENTORY REPORT</h2>
-                    <p>AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>NO.</th>
-                                <th>PRODUCT CODE</th>
-                                <th>NAME / DESCRIPTION</th>
-                                <th>CLASSIFICATION</th>
-                                <th>QTY</th>
-                                <th>UNIT</th>
-                                <th>CONDITION</th>
-                                <th>LOCATION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            // I-group by Area
-            const groupedItems = {};
-            allItems.forEach(item => {
-                const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
-                if (!groupedItems[areaName]) groupedItems[areaName] = [];
-                groupedItems[areaName].push(item);
-            });
-
-            for (const [areaName, items] of Object.entries(groupedItems)) {
-                tableHTML += `<tr><td colspan="8" style="background-color: #f1f5f9; font-weight: bold; font-size: 14px;">${areaName.toUpperCase()}</td></tr>`;
-                
-                items.forEach((item, index) => {
-                    tableHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.code}</td>
-                            <td>${item.name}</td>
-                            <td>${item.category}</td>
-                            <td>${item.quantity}</td>
-                            <td>${item.unit || 'pcs'}</td>
-                            <td>${item.condition}</td>
-                            <td>${item.location || areaName}</td>
-                        </tr>
-                    `;
-                });
-                tableHTML += `<tr><td colspan="8"></td></tr>`; // space
-            }
-
-            tableHTML += `</tbody></table></body></html>`;
-
-            // I-download as .xls (Excel file)
-            const blob = new Blob([tableHTML], { type: 'application/vnd.ms-excel' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Inventory_Report_${new Date().toISOString().split('T')[0]}.xls`;
-            link.click();
-        }
-    </script>
 </body>
 </html>
