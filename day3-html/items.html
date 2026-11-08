@@ -5,19 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Item List - Inventory System</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="theme-color" content="#1e3a5f">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="sidebar-logo.png" alt="Compact II Letterhead" class="sidebar-logo" onerror="this.style.display='none'">
-                <h2>Inventory</h2>
-                <p>Compact II Gencon Inc.</p>
+                <img src="sidebar-logo.png" alt="Compact II Logo" class="sidebar-logo" onerror="this.style.display='none'">
             </div>
-            
             <nav class="sidebar-nav">
                 <a href="dashboard.html" data-role="admin-management">📊 Dashboard</a>
                 <a href="index.html">📝 Add Item</a>
@@ -28,7 +23,7 @@
                 <a href="reports.html" data-role="admin-management">📈 Reports</a>
                 <a href="users.html" data-role="admin">👥 Users</a>
                 <a href="profile.html">👤 My Profile</a>
-                <a href="#" onclick="logout()">🚪 Logout</a>
+                <a href="#" onclick="logout()" style="color: #f87171; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">🚪 Logout</a>
             </nav>
         </aside>
 
@@ -43,7 +38,6 @@
             <section class="content-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin: 0;">📋 All Items</h2>
-                    
                     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                         <div>
                             <input type="text" id="searchItem" onkeyup="filterItems()" placeholder="🔍 Search name or code..." style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 200px; font-size: 14px;">
@@ -53,9 +47,9 @@
                                 <option value="All">🌐 All Sites</option>
                             </select>
                         </div>
-                        <div style="display: flex; gap: 5px;">
-                            <button onclick="exportToAreaExcel()" style="background-color: #27ae60; margin-right: 5px;">📥 Export by Area</button>
-                            <button onclick="printItemList()" style="background-color: #1e3a5f;">🖨️ Print</button>
+                        <div>
+                            <button onclick="exportToExcel()" style="padding: 10px 20px; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; margin-right: 5px;">📥 Export to Excel</button>
+                            <button onclick="printItemList()" style="padding: 10px 20px; background-color: #1e3a5f; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">🖨️ Print</button>
                         </div>
                     </div>
                 </div>
@@ -84,24 +78,13 @@
 
     <!-- MOBILE BOTTOM NAVIGATION -->
     <nav class="mobile-bottom-nav">
-        <a href="dashboard.html" class="mobile-nav-item">
-            <span class="icon">📊</span><span class="text">Home</span>
-        </a>
-        <a href="items.html" class="mobile-nav-item">
-            <span class="icon">📋</span><span class="text">Items</span>
-        </a>
-        <a href="scan.html" class="mobile-nav-item">
-            <span class="icon">📱</span><span class="text">Scan</span>
-        </a>
-        <a href="issue.html" class="mobile-nav-item">
-            <span class="icon">📤</span><span class="text">Issue</span>
-        </a>
-        <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMoreMenu(event)">
-            <span class="icon">☰</span><span class="text">More</span>
-        </a>
+        <a href="dashboard.html" class="mobile-nav-item"><span class="icon">📊</span><span class="text">Home</span></a>
+        <a href="items.html" class="mobile-nav-item active"><span class="icon">📋</span><span class="text">Items</span></a>
+        <a href="scan.html" class="mobile-nav-item"><span class="icon">📱</span><span class="text">Scan</span></a>
+        <a href="issue.html" class="mobile-nav-item"><span class="icon">📤</span><span class="text">Issue</span></a>
+        <a href="javascript:void(0)" class="mobile-nav-item" onclick="toggleMoreMenu(event)"><span class="icon">☰</span><span class="text">More</span></a>
     </nav>
 
-    <!-- MORE MENU POPUP -->
     <div id="moreMenu" class="more-menu-popup">
         <a href="discrepancies.html">⚠️ Discrepancies</a>
         <a href="reports.html">📈 Reports</a>
@@ -110,20 +93,94 @@
         <a href="#" onclick="logout()" style="color: #e74c3c; border-top: 1px solid #eee; margin-top: 5px; padding-top: 10px;">🚪 Logout</a>
     </div>
 
-   <!-- ITO DAPAT ANG NASA TAAS -->
+    <!-- MGA SCRIPTS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-
-    <!-- ITO YUNG MGA LOCAL SCRIPTS MO -->
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="items.js"></script>
     
+    <!-- ITO YUNG BAGONG SCRIPT PARA SA EXPORT -->
     <script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker.register("service-worker.js").catch(() => {});
-        });
-    }
+        async function exportToExcel() {
+            if (!allItems || allItems.length === 0) {
+                alert("⚠️ No items to export.");
+                return;
+            }
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Inventory by Area');
+                worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true };
+
+                let logoId = null;
+                try {
+                    const logoResponse = await fetch('sidebar-logo.png');
+                    if (logoResponse.ok) {
+                        const logoBuffer = await logoResponse.arrayBuffer();
+                        logoId = workbook.addImage({ buffer: logoBuffer, extension: 'png' });
+                    }
+                } catch (e) { }
+
+                if (logoId) {
+                    worksheet.addImage(logoId, { tl: { col: 2, row: 0 }, ext: { width: 300, height: 90 } });
+                }
+
+                for (let i = 0; i < 6; i++) worksheet.addRow([]);
+
+                const titleRow = worksheet.addRow(["INVENTORY REPORT"]);
+                titleRow.font = { size: 16, bold: true };
+                titleRow.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${titleRow.number}:H${titleRow.number}`);
+
+                const dateRow = worksheet.addRow([`AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
+                dateRow.font = { size: 12, italic: true };
+                dateRow.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${dateRow.number}:H${dateRow.number}`);
+                worksheet.addRow([]); 
+
+                const groupedItems = {};
+                allItems.forEach(item => {
+                    const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
+                    if (!groupedItems[areaName]) groupedItems[areaName] = [];
+                    groupedItems[areaName].push(item);
+                });
+
+                for (const [areaName, items] of Object.entries(groupedItems)) {
+                    const areaRow = worksheet.addRow([areaName.toUpperCase()]);
+                    areaRow.font = { size: 12, bold: true };
+                    worksheet.mergeCells(`A${areaRow.number}:H${areaRow.number}`);
+                    worksheet.addRow([]);
+
+                    const headerRow = worksheet.addRow(["NO.", "PRODUCT CODE", "NAME / DESCRIPTION", "CLASSIFICATION", "QTY", "UNIT", "CONDITION", "LOCATION"]);
+                    headerRow.eachCell((cell) => {
+                        cell.font = { bold: true };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+                        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                    });
+
+                    items.forEach((item, index) => {
+                        const row = worksheet.addRow([index + 1, item.code, item.name, item.category, item.quantity, item.unit || 'pcs', item.condition, item.location || areaName]);
+                        row.eachCell((cell) => {
+                            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                        });
+                    });
+                    worksheet.addRow([]); 
+                }
+
+                worksheet.columns.forEach((column, i) => {
+                    column.width = i === 0 ? 5 : i === 1 ? 18 : i === 2 ? 30 : i === 3 ? 22 : i === 4 ? 8 : i === 5 ? 8 : i === 6 ? 15 : 20;
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `CompactII_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
+                link.click();
+            } catch (error) {
+                console.error(error);
+                alert("⚠️ Cannot generate Excel. Check console.");
+            }
+        }
     </script>
 </body>
 </html>
