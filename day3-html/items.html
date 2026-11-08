@@ -99,7 +99,7 @@
     <script src="auth.js"></script>
     <script src="items.js"></script>
     
-    <!-- ITO YUNG BAGONG SCRIPT PARA SA EXPORT -->
+        <!-- ITO YUNG BAGONG SCRIPT PARA SA EXPORT -->
     <script>
         async function exportToExcel() {
             if (typeof allItems === 'undefined' || !allItems || allItems.length === 0) {
@@ -108,10 +108,10 @@
             }
             try {
                 const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet('Inventory by Area');
+                const worksheet = workbook.addWorksheet('Inventory Report');
                 
-                // Page setup
-                worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true };
+                // Page setup (Portrait, A4)
+                worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, margins: { top: 1, bottom: 1, left: 0.5, right: 0.5 } };
 
                 // 1. FETCH LOGO
                 let logoId = null;
@@ -125,33 +125,55 @@
                     console.warn("Logo fetch failed:", e); 
                 }
 
-                // 2. ILAGAY ANG LOGO (Naka-center sa column D/E)
+                // 2. ILAGAY ANG LOGO (Center)
                 if (logoId) {
                     worksheet.addImage(logoId, { 
-                        tl: { col: 2.5, row: 0.2 }, // 0-indexed: col 2.5 means gitna ng C at D
-                        ext: { width: 300, height: 90 } 
+                        tl: { col: 2.5, row: 0 }, 
+                        ext: { width: 250, height: 75 } 
                     });
                 }
 
-                // 3. SPACING (Para hindi magpatong ang logo at title)
-                for (let i = 0; i < 6; i++) worksheet.addRow([]);
+                // 3. SPACING (Para hindi magpatong ang logo at text)
+                for (let i = 0; i < 4; i++) worksheet.addRow([]);
 
-                // 4. TITLE & DATE
+                // 4. COMPANY HEADER
+                const companyName = worksheet.addRow(["COMPACT II GENCON, INCORPORATED"]);
+                companyName.font = { size: 16, bold: true, color: { argb: 'FF800000' } }; // Maroon
+                companyName.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${companyName.number}:H${companyName.number}`);
+
+                const subCompany = worksheet.addRow(["GENERAL CONTRACTOR"]);
+                subCompany.font = { size: 10, italic: true, color: { argb: 'FF666666' } };
+                subCompany.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${subCompany.number}:H${subCompany.number}`);
+
+                const address = worksheet.addRow(["4th Street Don E. Sero, Barangay Rosary Heights 5"]);
+                address.font = { size: 9 };
+                address.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${address.number}:H${address.number}`);
+
+                const contact = worksheet.addRow(["Telephone No: (064) 421-3972 | Cellphone No: 0975-220-2131 | Email: compact.gencon@yahoo.com"]);
+                contact.font = { size: 9 };
+                contact.alignment = { horizontal: 'center' };
+                worksheet.mergeCells(`A${contact.number}:H${contact.number}`);
+
+                worksheet.addRow([]); // Spacer
+
+                // 5. REPORT TITLE & DATE
                 const titleRow = worksheet.addRow(["INVENTORY REPORT"]);
-                titleRow.font = { size: 16, bold: true };
+                titleRow.font = { size: 14, bold: true };
                 titleRow.alignment = { horizontal: 'center' };
                 worksheet.mergeCells(`A${titleRow.number}:H${titleRow.number}`);
 
                 const dateRow = worksheet.addRow([`AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
-                dateRow.font = { size: 12, italic: true };
+                dateRow.font = { size: 11, italic: true };
                 dateRow.alignment = { horizontal: 'center' };
                 worksheet.mergeCells(`A${dateRow.number}:H${dateRow.number}`);
                 worksheet.addRow([]); 
 
-                // 5. GROUP BY AREA AT GAWIN ANG TABLE
+                // 6. GROUP BY AREA AT GAWIN ANG TABLE
                 const groupedItems = {};
                 allItems.forEach(item => {
-                    // Kung walang warehouse_name, fallback sa location, tapos Unassigned
                     const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
                     if (!groupedItems[areaName]) groupedItems[areaName] = [];
                     groupedItems[areaName].push(item);
@@ -159,10 +181,15 @@
 
                 for (const [areaName, items] of Object.entries(groupedItems)) {
                     // Area Header
-                    const areaRow = worksheet.addRow([areaName.toUpperCase()]);
-                    areaRow.font = { size: 12, bold: true };
+                    const areaRow = worksheet.addRow([`a. ${areaName}`]); // Ginawang parang letter a.
+                    areaRow.font = { size: 11, bold: true };
                     areaRow.alignment = { horizontal: 'left' };
                     worksheet.mergeCells(`A${areaRow.number}:H${areaRow.number}`);
+                    
+                    const locRow = worksheet.addRow([`Location: ${areaName}`]); // Fallback location text
+                    locRow.font = { size: 10 };
+                    locRow.alignment = { horizontal: 'left' };
+                    worksheet.mergeCells(`A${locRow.number}:H${locRow.number}`);
                     worksheet.addRow([]);
 
                     // Table Header
@@ -187,20 +214,20 @@
                             item.location || areaName
                         ]);
                         
-                        // Borders para sa bawat cell
                         row.eachCell((cell) => {
                             cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
                         });
                     });
                     worksheet.addRow([]); 
+                    worksheet.addRow([]); 
                 }
 
-                // 6. COLUMN WIDTHS (Para hindi siksikan)
+                // 7. COLUMN WIDTHS
                 worksheet.columns.forEach((column, i) => {
                     column.width = i === 0 ? 6 : i === 1 ? 18 : i === 2 ? 35 : i === 3 ? 22 : i === 4 ? 8 : i === 5 ? 8 : i === 6 ? 15 : 25;
                 });
 
-                // 7. GENERATE & DOWNLOAD
+                // 8. GENERATE & DOWNLOAD
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
                 const link = document.createElement("a");
@@ -214,5 +241,3 @@
             }
         }
     </script>
-</body>
-</html>
