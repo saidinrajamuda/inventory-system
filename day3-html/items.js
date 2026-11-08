@@ -1,4 +1,4 @@
-// ===== ITEM LIST WITH SITE FILTER =====
+// ===== ITEM LIST - FINAL CLEAN VERSION =====
 const API_URL = `${window.API_BASE_URL}/api/items`;
 const API_WAREHOUSES = `${window.API_BASE_URL}/api/warehouses`;
 
@@ -21,7 +21,7 @@ async function loadItems() {
     }
 }
 
-// ===== LOAD WAREHOUSES (Para sa Filter Dropdown) =====
+// ===== LOAD WAREHOUSES =====
 async function loadWarehousesForFilter() {
     try {
         const response = await fetch(API_WAREHOUSES, { headers: authHeaders() });
@@ -41,7 +41,7 @@ async function loadWarehousesForFilter() {
     }
 }
 
-// ===== RENDER TABLE WITH COLOR CODING =====
+// ===== RENDER TABLE =====
 function renderTable(items) {
     const tbody = document.getElementById("itemsTableBody");
 
@@ -83,7 +83,7 @@ function renderTable(items) {
     `}).join("");
 }
 
-// ===== FILTER LOGIC (Search + Site) =====
+// ===== FILTER =====
 function filterItems() {
     const searchQuery = document.getElementById("searchItem").value.toLowerCase();
     const selectedSiteId = document.getElementById("filterSite").value;
@@ -130,17 +130,7 @@ async function showBarcode(id) {
     }
 }
 
-// ===== INITIALIZE =====
-document.addEventListener("DOMContentLoaded", () => {
-    if (!isLoggedIn()) {
-        window.location.href = "login.html";
-        return;
-    }
-    loadItems();
-    loadWarehousesForFilter(); 
-});
-
-// ===== PRINT ITEM LIST (Using Full Letterhead Image) =====
+// ===== PRINT =====
 function printItemList() {
     const rows = document.querySelectorAll("#itemsTableBody tr");
     if (rows.length === 0 || rows[0].innerText.includes("No items")) {
@@ -259,143 +249,61 @@ function printItemList() {
     }, 500);
 }
 
-// ===== EXPORT TO REAL EXCEL (.xlsx) BY AREA / WAREHOUSE =====
-async function exportToExcel() {
+// ===== EXPORT TO EXCEL (CSV) =====
+function exportToExcel() {
     if (!allItems || allItems.length === 0) {
         alert("⚠️ No items to export.");
         return;
     }
 
-    if (typeof ExcelJS === 'undefined') {
-        alert("⚠️ Excel library is not loaded. Please check if the script tag for ExcelJS is in your HTML file.");
+    let csvContent = "\uFEFF"; 
+    csvContent += "INVENTORY REPORT\n";
+    csvContent += `AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}\n\n`;
+    csvContent += "NO.,PRODUCT CODE,NAME / DESCRIPTION,CLASSIFICATION,QTY,UNIT,CONDITION,LOCATION\n";
+
+    const groupedItems = {};
+    allItems.forEach(item => {
+        const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
+        if (!groupedItems[areaName]) groupedItems[areaName] = [];
+        groupedItems[areaName].push(item);
+    });
+
+    for (const [areaName, items] of Object.entries(groupedItems)) {
+        csvContent += `"${areaName.toUpperCase()}"\n`; 
+        
+        items.forEach((item, index) => {
+            const row = [
+                index + 1,
+                `"${item.code}"`,
+                `"${item.name}"`,
+                `"${item.category}"`,
+                item.quantity,
+                `"${item.unit || 'pcs'}"`,
+                `"${item.condition}"`,
+                `"${item.location || areaName}"`
+            ].join(",");
+            csvContent += row + "\n";
+        });
+        csvContent += "\n"; 
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `CompactII_Inventory_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ===== INITIALIZE =====
+document.addEventListener("DOMContentLoaded", () => {
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
         return;
     }
-
-    try {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Inventory');
-
-        // Setup page (A4)
-        worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1 };
-
-        // --- LOGO FETCHING ---
-        try {
-            const logoResponse = await fetch('sidebar-logo.png');
-            if (logoResponse.ok) {
-                const logoBuffer = await logoResponse.arrayBuffer();
-                const logoId = workbook.addImage({ buffer: logoBuffer, extension: 'png' });
-                // I-center ang logo
-                worksheet.addImage(logoId, {
-                    tl: { col: 2, row: 0 }, 
-                    ext: { width: 300, height: 90 }
-                });
-            }
-        } catch (imgError) {
-            console.warn("Error loading logo, skipping image.", imgError);
-        }
-
-        // Space para sa logo
-        for (let i = 0; i < 6; i++) {
-            worksheet.addRow([]);
-        }
-
-        // Main Title
-        const titleRow = worksheet.addRow(["INVENTORY REPORT"]);
-        titleRow.font = { size: 16, bold: true };
-        titleRow.alignment = { horizontal: 'center' };
-        worksheet.mergeCells(`A${titleRow.number}:H${titleRow.number}`);
-
-        // Date
-        const dateRow = worksheet.addRow([`AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
-        dateRow.alignment = { horizontal: 'center' };
-        worksheet.mergeCells(`A${dateRow.number}:H${dateRow.number}`);
-        
-        worksheet.addRow([]); 
-        worksheet.addRow([]); 
-
-        // --- I-GROUP ANG ITEMS PER WAREHOUSE/SITE ---
-        const groupedItems = {};
-        allItems.forEach(item => {
-            const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
-            if (!groupedItems[areaName]) {
-                groupedItems[areaName] = [];
-            }
-            groupedItems[areaName].push(item);
-        });
-
-        // I-loop bawat Area
-        for (const [areaName, items] of Object.entries(groupedItems)) {
-            
-            // Section Title
-            const areaRow = worksheet.addRow([areaName.toUpperCase()]);
-            areaRow.font = { size: 12, bold: true, color: { argb: 'FF000000' } };
-            areaRow.alignment = { horizontal: 'left' };
-            worksheet.mergeCells(`A${areaRow.number}:H${areaRow.number}`);
-
-            // Subtitle (Location)
-            const locRow = worksheet.addRow([`Location: ${areaName}`]);
-            locRow.font = { size: 10, italic: true };
-            worksheet.mergeCells(`A${locRow.number}:H${locRow.number}`);
-            
-            worksheet.addRow([]); 
-
-            // Table Headers
-            const headerRow = worksheet.addRow(["NO.", "PRODUCT CODE", "NAME / DESCRIPTION", "CLASSIFICATION", "QTY", "UNIT", "CONDITION", "LOCATION"]);
-
-            headerRow.eachCell((cell) => {
-                cell.font = { bold: true, color: { argb: 'FF000000' } };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; 
-                cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-            });
-
-            // Data Rows
-            items.forEach((item, index) => {
-                const row = worksheet.addRow([
-                    index + 1,
-                    item.code,
-                    item.name,
-                    item.category,
-                    item.quantity,
-                    item.unit || 'pcs',
-                    item.condition,
-                    item.location || areaName
-                ]);
-
-                row.eachCell((cell) => {
-                    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-                    if ([1, 5, 6].includes(cell.col)) {
-                        cell.alignment = { horizontal: 'center' };
-                    }
-                });
-            });
-
-            worksheet.addRow([]); 
-            worksheet.addRow([]); 
-        }
-
-        // Auto-fit Column Widths
-        worksheet.columns.forEach((column, i) => {
-            if (i === 0) column.width = 5;
-            else if (i === 1) column.width = 18;
-            else if (i === 2) column.width = 30;
-            else if (i === 3) column.width = 22;
-            else if (i === 4) column.width = 8;
-            else if (i === 5) column.width = 8;
-            else if (i === 6) column.width = 15;
-            else if (i === 7) column.width = 20;
-        });
-
-        // Download
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `CompactII_Inventory_ByArea_${new Date().toISOString().split('T')[0]}.xlsx`;
-        link.click();
-
-    } catch (error) {
-        console.error("Excel Export Error:", error);
-        alert("⚠️ Cannot generate Excel file.\nError: " + error.message);
-    }
-}
+    loadItems();
+    loadWarehousesForFilter(); 
+});
