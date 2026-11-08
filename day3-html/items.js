@@ -259,14 +259,13 @@ function printItemList() {
     }, 500);
 }
 
-// ===== EXPORT TO REAL EXCEL (.xlsx) WITH LOGO (SAFE MODE) =====
+// ===== EXPORT TO REAL EXCEL (.xlsx) BY AREA / WAREHOUSE =====
 async function exportToExcel() {
     if (!allItems || allItems.length === 0) {
         alert("⚠️ No items to export.");
         return;
     }
 
-    // ✅ CHECK KUNG NAKA-LOAD ANG LIBRARY
     if (typeof ExcelJS === 'undefined') {
         alert("⚠️ Excel library is not loaded. Please check if the script tag for ExcelJS is in your HTML file.");
         return;
@@ -279,24 +278,17 @@ async function exportToExcel() {
         // Setup page (A4)
         worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1 };
 
-        // --- LOGO FETCHING LOGIC (SAFE) ---
+        // --- LOGO FETCHING ---
         try {
-            // Hahanapin natin yung image sa parehong folder
             const logoResponse = await fetch('sidebar-logo.png');
-            
             if (logoResponse.ok) {
                 const logoBuffer = await logoResponse.arrayBuffer();
-                const logoId = workbook.addImage({
-                    buffer: logoBuffer,
-                    extension: 'png',
-                });
-
+                const logoId = workbook.addImage({ buffer: logoBuffer, extension: 'png' });
+                // I-center ang logo
                 worksheet.addImage(logoId, {
-                    tl: { col: 1, row: 0 },
-                    ext: { width: 280, height: 90 }
+                    tl: { col: 2, row: 0 }, 
+                    ext: { width: 300, height: 90 }
                 });
-            } else {
-                console.warn("Logo 'sidebar-logo.png' not found. Proceeding without logo.");
             }
         } catch (imgError) {
             console.warn("Error loading logo, skipping image.", imgError);
@@ -307,73 +299,103 @@ async function exportToExcel() {
             worksheet.addRow([]);
         }
 
-        // Title
-        const titleRow = worksheet.addRow(["INVENTORY MASTER LIST"]);
+        // Main Title
+        const titleRow = worksheet.addRow(["INVENTORY REPORT"]);
         titleRow.font = { size: 16, bold: true };
         titleRow.alignment = { horizontal: 'center' };
-        worksheet.mergeCells(`A${titleRow.number}:F${titleRow.number}`);
+        worksheet.mergeCells(`A${titleRow.number}:H${titleRow.number}`);
 
         // Date
         const dateRow = worksheet.addRow([`AS OF ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`]);
         dateRow.alignment = { horizontal: 'center' };
-        worksheet.mergeCells(`A${dateRow.number}:F${dateRow.number}`);
+        worksheet.mergeCells(`A${dateRow.number}:H${dateRow.number}`);
         
-        worksheet.addRow([]);
+        worksheet.addRow([]); 
+        worksheet.addRow([]); 
 
-        // Table Headers
-        const headerRow = worksheet.addRow(["NO.", "PRODUCT CODE", "NAME / DESCRIPTION", "CLASSIFICATION", "QTY", "UNIT"]);
-        
-        headerRow.eachCell((cell) => {
-            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = {
-                top: { style: 'thin' }, left: { style: 'thin' },
-                bottom: { style: 'thin' }, right: { style: 'thin' }
-            };
+        // --- I-GROUP ANG ITEMS PER WAREHOUSE/SITE ---
+        const groupedItems = {};
+        allItems.forEach(item => {
+            const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
+            if (!groupedItems[areaName]) {
+                groupedItems[areaName] = [];
+            }
+            groupedItems[areaName].push(item);
         });
 
-        // Data Rows
-        allItems.forEach((item, index) => {
-            const row = worksheet.addRow([
-                index + 1,
-                item.code,
-                item.name,
-                item.category,
-                item.quantity,
-                item.unit || 'pcs'
-            ]);
+        // I-loop bawat Area
+        for (const [areaName, items] of Object.entries(groupedItems)) {
+            
+            // Section Title
+            const areaRow = worksheet.addRow([areaName.toUpperCase()]);
+            areaRow.font = { size: 12, bold: true, color: { argb: 'FF000000' } };
+            areaRow.alignment = { horizontal: 'left' };
+            worksheet.mergeCells(`A${areaRow.number}:H${areaRow.number}`);
 
-            row.eachCell((cell) => {
-                cell.border = {
-                    top: { style: 'thin' }, left: { style: 'thin' },
-                    bottom: { style: 'thin' }, right: { style: 'thin' }
-                };
-                if(cell.col === 1 || cell.col === 5 || cell.col === 6) {
-                    cell.alignment = { horizontal: 'center' };
-                }
+            // Subtitle (Location)
+            const locRow = worksheet.addRow([`Location: ${areaName}`]);
+            locRow.font = { size: 10, italic: true };
+            worksheet.mergeCells(`A${locRow.number}:H${locRow.number}`);
+            
+            worksheet.addRow([]); 
+
+            // Table Headers
+            const headerRow = worksheet.addRow(["NO.", "PRODUCT CODE", "NAME / DESCRIPTION", "CLASSIFICATION", "QTY", "UNIT", "CONDITION", "LOCATION"]);
+
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true, color: { argb: 'FF000000' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; 
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
             });
-        });
+
+            // Data Rows
+            items.forEach((item, index) => {
+                const row = worksheet.addRow([
+                    index + 1,
+                    item.code,
+                    item.name,
+                    item.category,
+                    item.quantity,
+                    item.unit || 'pcs',
+                    item.condition,
+                    item.location || areaName
+                ]);
+
+                row.eachCell((cell) => {
+                    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                    if ([1, 5, 6].includes(cell.col)) {
+                        cell.alignment = { horizontal: 'center' };
+                    }
+                });
+            });
+
+            worksheet.addRow([]); 
+            worksheet.addRow([]); 
+        }
 
         // Auto-fit Column Widths
-        worksheet.columns.forEach(column => {
-            column.width = 20;
+        worksheet.columns.forEach((column, i) => {
+            if (i === 0) column.width = 5;
+            else if (i === 1) column.width = 18;
+            else if (i === 2) column.width = 30;
+            else if (i === 3) column.width = 22;
+            else if (i === 4) column.width = 8;
+            else if (i === 5) column.width = 8;
+            else if (i === 6) column.width = 15;
+            else if (i === 7) column.width = 20;
         });
-        worksheet.getColumn(1).width = 8;
-        worksheet.getColumn(5).width = 10;
-        worksheet.getColumn(6).width = 10;
 
         // Download
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `CompactII_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
+        link.download = `CompactII_Inventory_ByArea_${new Date().toISOString().split('T')[0]}.xlsx`;
         link.click();
 
     } catch (error) {
         console.error("Excel Export Error:", error);
-        // Ipakita ang totoong error sa alert para malaman natin kung ano ang mali
         alert("⚠️ Cannot generate Excel file.\nError: " + error.message);
     }
 }
