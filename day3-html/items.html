@@ -102,15 +102,18 @@
     <!-- ITO YUNG BAGONG SCRIPT PARA SA EXPORT -->
     <script>
         async function exportToExcel() {
-            if (!allItems || allItems.length === 0) {
+            if (typeof allItems === 'undefined' || !allItems || allItems.length === 0) {
                 alert("⚠️ No items to export.");
                 return;
             }
             try {
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Inventory by Area');
+                
+                // Page setup
                 worksheet.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true };
 
+                // 1. FETCH LOGO
                 let logoId = null;
                 try {
                     const logoResponse = await fetch('logo.png');
@@ -118,14 +121,22 @@
                         const logoBuffer = await logoResponse.arrayBuffer();
                         logoId = workbook.addImage({ buffer: logoBuffer, extension: 'png' });
                     }
-                } catch (e) { }
-
-                if (logoId) {
-                    worksheet.addImage(logoId, { tl: { col: 2, row: 0 }, ext: { width: 300, height: 90 } });
+                } catch (e) { 
+                    console.warn("Logo fetch failed:", e); 
                 }
 
+                // 2. ILAGAY ANG LOGO (Naka-center sa column D/E)
+                if (logoId) {
+                    worksheet.addImage(logoId, { 
+                        tl: { col: 2.5, row: 0.2 }, // 0-indexed: col 2.5 means gitna ng C at D
+                        ext: { width: 300, height: 90 } 
+                    });
+                }
+
+                // 3. SPACING (Para hindi magpatong ang logo at title)
                 for (let i = 0; i < 6; i++) worksheet.addRow([]);
 
+                // 4. TITLE & DATE
                 const titleRow = worksheet.addRow(["INVENTORY REPORT"]);
                 titleRow.font = { size: 16, bold: true };
                 titleRow.alignment = { horizontal: 'center' };
@@ -137,28 +148,46 @@
                 worksheet.mergeCells(`A${dateRow.number}:H${dateRow.number}`);
                 worksheet.addRow([]); 
 
+                // 5. GROUP BY AREA AT GAWIN ANG TABLE
                 const groupedItems = {};
                 allItems.forEach(item => {
+                    // Kung walang warehouse_name, fallback sa location, tapos Unassigned
                     const areaName = item.warehouse_name || item.location || "Unassigned Area"; 
                     if (!groupedItems[areaName]) groupedItems[areaName] = [];
                     groupedItems[areaName].push(item);
                 });
 
                 for (const [areaName, items] of Object.entries(groupedItems)) {
+                    // Area Header
                     const areaRow = worksheet.addRow([areaName.toUpperCase()]);
                     areaRow.font = { size: 12, bold: true };
+                    areaRow.alignment = { horizontal: 'left' };
                     worksheet.mergeCells(`A${areaRow.number}:H${areaRow.number}`);
                     worksheet.addRow([]);
 
+                    // Table Header
                     const headerRow = worksheet.addRow(["NO.", "PRODUCT CODE", "NAME / DESCRIPTION", "CLASSIFICATION", "QTY", "UNIT", "CONDITION", "LOCATION"]);
                     headerRow.eachCell((cell) => {
                         cell.font = { bold: true };
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } }; // Light blue
                         cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
                     });
 
+                    // Table Data
                     items.forEach((item, index) => {
-                        const row = worksheet.addRow([index + 1, item.code, item.name, item.category, item.quantity, item.unit || 'pcs', item.condition, item.location || areaName]);
+                        const row = worksheet.addRow([
+                            index + 1, 
+                            item.code, 
+                            item.name, 
+                            item.category, 
+                            item.quantity, 
+                            item.unit || 'pcs', 
+                            item.condition, 
+                            item.location || areaName
+                        ]);
+                        
+                        // Borders para sa bawat cell
                         row.eachCell((cell) => {
                             cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
                         });
@@ -166,19 +195,22 @@
                     worksheet.addRow([]); 
                 }
 
+                // 6. COLUMN WIDTHS (Para hindi siksikan)
                 worksheet.columns.forEach((column, i) => {
-                    column.width = i === 0 ? 5 : i === 1 ? 18 : i === 2 ? 30 : i === 3 ? 22 : i === 4 ? 8 : i === 5 ? 8 : i === 6 ? 15 : 20;
+                    column.width = i === 0 ? 6 : i === 1 ? 18 : i === 2 ? 35 : i === 3 ? 22 : i === 4 ? 8 : i === 5 ? 8 : i === 6 ? 15 : 25;
                 });
 
+                // 7. GENERATE & DOWNLOAD
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
                 link.download = `CompactII_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
                 link.click();
+
             } catch (error) {
-                console.error(error);
-                alert("⚠️ Cannot generate Excel. Check console.");
+                console.error("Excel Export Error:", error);
+                alert("⚠️ Cannot generate Excel. Check console for details.");
             }
         }
     </script>
