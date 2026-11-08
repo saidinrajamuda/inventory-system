@@ -113,7 +113,7 @@
 
                 let logoId = null;
                 try {
-                    const logoResponse = await fetch('sidebar-logo.png');
+                    const logoResponse = await fetch('logo.png');
                     if (logoResponse.ok) {
                         const logoBuffer = await logoResponse.arrayBuffer();
                         logoId = workbook.addImage({ buffer: logoBuffer, extension: 'png' });
